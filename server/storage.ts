@@ -156,9 +156,18 @@ export class MemStorage implements IStorage {
   }
 
   private async createInitialUsers() {
-    // Password comuni per tutti gli account: "admin"
-    // La password è già hashata nel formato corretto per comparePasswords
-    const commonPassword = "6d7220ea1133a7c7818422aab9e7dd0e4c8aaf7464d9ab183e2786d02804d27c96e86307a0e4ae58ed5fa3d204658288eeca9c719ff83c3e63f3aa5f83146818.e61e913d9b01a32c13b0a458ea5d1b68";
+    // Funzione per hashare password direttamente qui
+    const hashPassword = async (password: string) => {
+      const { scrypt, randomBytes } = await import('crypto');
+      const { promisify } = await import('util');
+      const scryptAsync = promisify(scrypt);
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+      return `${buf.toString("hex")}.${salt}`;
+    };
+    
+    // Creare una password "admin" hashata
+    const commonPassword = await hashPassword("admin");
     
     // Amministratore
     const admin = {
