@@ -1,5 +1,5 @@
-import { users, products, cosmeticDetails, supplementDetails } from "@shared/schema";
-import type { User, InsertUser, Product, InsertProduct, CosmeticDetails, InsertCosmeticDetails, SupplementDetails, InsertSupplementDetails } from "@shared/schema";
+import { users, products, cosmeticDetails, supplementDetails, groups } from "@shared/schema";
+import type { User, InsertUser, Product, InsertProduct, CosmeticDetails, InsertCosmeticDetails, SupplementDetails, InsertSupplementDetails, Group, InsertGroup } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -7,6 +7,13 @@ const MemoryStore = createMemoryStore(session);
 
 // Interface for storage operations
 export interface IStorage {
+  // Group operations
+  createGroup(group: InsertGroup): Promise<Group>;
+  getGroup(id: number): Promise<Group | undefined>;
+  getGroups(): Promise<Group[]>;
+  updateGroup(id: number, group: Partial<InsertGroup>): Promise<Group | undefined>;
+  deleteGroup(id: number): Promise<boolean>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -17,9 +24,11 @@ export interface IStorage {
   // Product operations
   createProduct(product: InsertProduct): Promise<Product>;
   getProduct(id: number): Promise<Product | undefined>;
-  getProducts(type?: string): Promise<Product[]>;
+  getProducts(type?: string, groupId?: number): Promise<Product[]>;
   updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
+  autosaveProduct(id: number, data: any): Promise<boolean>;
+  getProductAutosave(id: number): Promise<any>;
   
   // Cosmetic details operations
   createCosmeticDetails(details: InsertCosmeticDetails): Promise<CosmeticDetails>;
@@ -31,6 +40,9 @@ export interface IStorage {
   getSupplementDetailsByProductId(productId: number): Promise<SupplementDetails | undefined>;
   updateSupplementDetails(productId: number, details: Partial<InsertSupplementDetails>): Promise<SupplementDetails | undefined>;
   
+  // Suggestion operations
+  getSuggestions(field: string, prefix: string): Promise<string[]>;
+  
   // Session store
   sessionStore: session.Store;
 }
@@ -41,21 +53,100 @@ export class MemStorage implements IStorage {
   private products: Map<number, Product>;
   private cosmeticDetails: Map<number, CosmeticDetails>;
   private supplementDetails: Map<number, SupplementDetails>;
+  private groups: Map<number, Group>;
+  private fieldValues: Map<string, Set<string>>;
   private userId: number;
   private productId: number;
   private cosmeticId: number;
   private supplementId: number;
+  private groupId: number;
   sessionStore: session.Store;
+  
+  // Implementazione metodi dei gruppi
+  async createGroup(group: InsertGroup): Promise<Group> {
+    const id = this.groupId++;
+    const createdAt = new Date();
+    
+    const newGroup: Group = {
+      ...group,
+      id,
+      createdAt,
+      description: group.description || null
+    };
+    
+    this.groups.set(id, newGroup);
+    return newGroup;
+  }
+  
+  async getGroup(id: number): Promise<Group | undefined> {
+    return this.groups.get(id);
+  }
+  
+  async getGroups(): Promise<Group[]> {
+    return Array.from(this.groups.values());
+  }
+  
+  async updateGroup(id: number, group: Partial<InsertGroup>): Promise<Group | undefined> {
+    const existingGroup = this.groups.get(id);
+    if (!existingGroup) return undefined;
+    
+    const updatedGroup: Group = {
+      ...existingGroup,
+      ...group
+    };
+    
+    this.groups.set(id, updatedGroup);
+    return updatedGroup;
+  }
+  
+  async deleteGroup(id: number): Promise<boolean> {
+    return this.groups.delete(id);
+  }
+  
+  // Metodi per l'autosalvataggio dei prodotti
+  async autosaveProduct(id: number, data: any): Promise<boolean> {
+    const product = this.products.get(id);
+    if (!product) return false;
+    
+    product.lastAutosave = data;
+    product.updatedAt = new Date();
+    
+    this.products.set(id, product);
+    return true;
+  }
+  
+  async getProductAutosave(id: number): Promise<any> {
+    const product = this.products.get(id);
+    if (!product) return null;
+    
+    return product.lastAutosave;
+  }
+  
+  // Metodo per i suggerimenti in base ai caratteri digitati
+  async getSuggestions(field: string, prefix: string): Promise<string[]> {
+    if (!this.fieldValues.has(field) || prefix.length < 3) {
+      return [];
+    }
+    
+    const values = this.fieldValues.get(field)!;
+    const prefixLower = prefix.toLowerCase();
+    return Array.from(values)
+      .filter(value => value.toLowerCase().includes(prefixLower))
+      .slice(0, 10); // limit results
+  }
 
   constructor() {
     this.users = new Map();
     this.products = new Map();
     this.cosmeticDetails = new Map();
     this.supplementDetails = new Map();
+    this.groups = new Map();
+    this.fieldValues = new Map();
     this.userId = 1;
     this.productId = 1;
     this.cosmeticId = 1;
     this.supplementId = 1;
+    this.groupId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24h
     });
@@ -82,7 +173,8 @@ export class MemStorage implements IStorage {
       id, 
       createdAt,
       role: insertUser.role || "visualizzatore",
-      approved: insertUser.approved !== undefined ? insertUser.approved : false
+      approved: insertUser.approved !== undefined ? insertUser.approved : false,
+      allowedGroups: insertUser.allowedGroups || null
     };
     
     this.users.set(id, user);
@@ -141,24 +233,52 @@ export class MemStorage implements IStorage {
       warnings: null,
       conservationMethod: null,
       specialWarnings: null,
+      groupId: null,
+      isComplete: false,
+      lastAutosave: null,
       
       // Override con i valori inseriti
       ...insertProduct
     };
     
     this.products.set(id, product);
+    
+    // Store field values for autocomplete suggestions
+    this.storeFieldValues(product);
+    
     return product;
+  }
+  
+  // Metodo di utilità per memorizzare i valori dei campi per i suggerimenti
+  private storeFieldValues(product: Product): void {
+    Object.entries(product).forEach(([field, value]) => {
+      // Saltiamo campi che non sono stringhe o sono vuoti/null
+      if (typeof value !== 'string' || !value) return;
+      
+      if (!this.fieldValues.has(field)) {
+        this.fieldValues.set(field, new Set());
+      }
+      
+      const fieldSet = this.fieldValues.get(field)!;
+      fieldSet.add(value);
+    });
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
     return this.products.get(id);
   }
 
-  async getProducts(type?: string): Promise<Product[]> {
-    const allProducts = Array.from(this.products.values());
+  async getProducts(type?: string, groupId?: number): Promise<Product[]> {
+    let allProducts = Array.from(this.products.values());
+    
     if (type) {
-      return allProducts.filter(product => product.type === type);
+      allProducts = allProducts.filter(product => product.type === type);
     }
+    
+    if (groupId !== undefined) {
+      allProducts = allProducts.filter(product => product.groupId === groupId);
+    }
+    
     return allProducts;
   }
 

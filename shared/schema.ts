@@ -2,6 +2,14 @@ import { pgTable, text, serial, integer, timestamp, boolean, unique, jsonb } fro
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Groups table
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -11,6 +19,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   role: text("role").notNull().default("visualizzatore"), // "amministratore", "compilatore", "visualizzatore"
   approved: boolean("approved").notNull().default(false),
+  allowedGroups: text("allowed_groups").array(), // Array of group IDs the user has access to (for visualizzatore)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -42,8 +51,11 @@ export const products = pgTable("products", {
   warnings: text("warnings"),
   conservationMethod: text("conservation_method"),
   specialWarnings: text("special_warnings"),
+  groupId: integer("group_id").references(() => groups.id), // Group this product belongs to
+  isComplete: boolean("is_complete").notNull().default(false), // Whether this product sheet is complete
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  lastAutosave: jsonb("last_autosave"), // Autosaved content
 });
 
 // Cosmetic details table
@@ -80,6 +92,11 @@ export const supplementDetails = pgTable("supplement_details", {
 });
 
 // Create schemas for validation
+export const insertGroupSchema = createInsertSchema(groups).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -89,6 +106,7 @@ export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  lastAutosave: true,
 });
 
 export const insertCosmeticDetailsSchema = createInsertSchema(cosmeticDetails).omit({
@@ -106,6 +124,8 @@ export const productWithDetailsSchema = z.object({
 });
 
 // Export types
+export type InsertGroup = z.infer<typeof insertGroupSchema>;
+export type Group = typeof groups.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;

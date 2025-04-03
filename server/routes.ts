@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { generateCosmeticPDF, generateSupplementPDF } from "./pdf";
 import { generateCosmeticMarkdown, generateSupplementMarkdown } from "./markdown";
-import { insertProductSchema, insertCosmeticDetailsSchema, insertSupplementDetailsSchema } from "@shared/schema";
+import { insertProductSchema, insertCosmeticDetailsSchema, insertSupplementDetailsSchema, insertGroupSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
@@ -58,10 +58,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/products", isAuthenticated, async (req, res, next) => {
     try {
-      // Get the type filter if provided
+      // Get filters if provided
       const type = req.query.type as string | undefined;
+      const groupId = req.query.groupId ? parseInt(req.query.groupId as string) : undefined;
       
-      const products = await storage.getProducts(type);
+      // Se l'utente è visualizzatore, controlla che abbia accesso ai gruppi richiesti
+      if (req.user?.role === "visualizzatore") {
+        // Se è stato specificato un groupId, verifica che l'utente abbia accesso
+        if (groupId !== undefined) {
+          const userAllowedGroups = req.user.allowedGroups || [];
+          if (!userAllowedGroups.includes(groupId.toString())) {
+            return res.status(403).json({ message: "Non hai accesso a questo gruppo di schede" });
+          }
+        } else {
+          // Se non è stato specificato un groupId, filtra in base ai gruppi consentiti all'utente
+          const userAllowedGroups = req.user.allowedGroups || [];
+          if (userAllowedGroups.length > 0) {
+            const allProducts = await storage.getProducts(type);
+            const filteredProducts = allProducts.filter(product => 
+              product.groupId !== null && 
+              userAllowedGroups.includes(product.groupId.toString())
+            );
+            return res.json(filteredProducts);
+          }
+          // Se l'utente non ha gruppi assegnati, restituisci un array vuoto
+          return res.json([]);
+        }
+      }
+      
+      const products = await storage.getProducts(type, groupId);
       res.json(products);
     } catch (error) {
       next(error);
@@ -80,6 +105,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Prodotto non trovato" });
       }
       
+      // Se l'utente è visualizzatore, verifica che abbia accesso a questo gruppo
+      if (req.user?.role === "visualizzatore" && product.groupId) {
+        const userAllowedGroups = req.user.allowedGroups || [];
+        if (!userAllowedGroups.includes(product.groupId.toString())) {
+          return res.status(403).json({ message: "Non hai accesso a questa scheda" });
+        }
+      }
+      
       let details;
       if (product.type === "cosmetic") {
         details = await storage.getCosmeticDetailsByProductId(id);
@@ -95,6 +128,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/products/:id", isAuthenticated, async (req, res, next) => {
     try {
+      // Solo amministratori e compilatori possono modificare i prodotti
+      if (req.user?.role !== "amministratore" && req.user?.role !== "compilatore") {
+        return res.status(403).json({ message: "Non autorizzato a modificare prodotti" });
+      }
+      
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "ID non valido" });
@@ -132,6 +170,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/products/:id", isAuthenticated, async (req, res, next) => {
     try {
+      // Solo gli amministratori possono eliminare i prodotti
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Non autorizzato a eliminare prodotti" });
+      }
+      
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "ID non valido" });
@@ -143,6 +186,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Group Routes
+  app.get("/api/groups", isAuthenticated, async (req, res, next) => {
+    try {
+      const groups = await storage.getGroups();
+      
+      // Se l'utente è visualizzatore, filtra i gruppi a cui ha accesso
+      if (req.user?.role === "visualizzatore") {
+        const userAllowedGroups = req.user.allowedGroups || [];
+        const filteredGroups = groups.filter(group => 
+          userAllowedGroups.includes(group.id.toString())
+        );
+        return res.json(filteredGroups);
+      }
+      
+      res.json(groups);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.post("/api/groups", isAuthenticated, async (req, res, next) => {
+    try {
+      // Solo admin e compilatori possono creare gruppi
+      if (req.user?.role !== "amministratore" && req.user?.role !== "compilatore") {
+        return res.status(403).json({ message: "Non autorizzato a creare gruppi" });
+      }
+      
+      const validatedGroup = insertGroupSchema.parse(req.body);
+      const newGroup = await storage.createGroup(validatedGroup);
+      res.status(201).json(newGroup);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: "Dati non validi", errors: error.errors });
+      } else {
+        next(error);
+      }
+    }
+  });
+  
+  app.get("/api/groups/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID gruppo non valido" });
+      }
+      
+      const group = await storage.getGroup(id);
+      if (!group) {
+        return res.status(404).json({ message: "Gruppo non trovato" });
+      }
+      
+      res.json(group);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.put("/api/groups/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      // Solo admin e compilatori possono modificare gruppi
+      if (req.user?.role !== "amministratore" && req.user?.role !== "compilatore") {
+        return res.status(403).json({ message: "Non autorizzato a modificare gruppi" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID gruppo non valido" });
+      }
+      
+      const validatedGroup = insertGroupSchema.partial().parse(req.body);
+      const updatedGroup = await storage.updateGroup(id, validatedGroup);
+      
+      if (!updatedGroup) {
+        return res.status(404).json({ message: "Gruppo non trovato" });
+      }
+      
+      res.json(updatedGroup);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: "Dati non validi", errors: error.errors });
+      } else {
+        next(error);
+      }
+    }
+  });
+  
+  app.delete("/api/groups/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      // Solo gli amministratori possono eliminare gruppi
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Non autorizzato a eliminare gruppi" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID gruppo non valido" });
+      }
+      
+      const success = await storage.deleteGroup(id);
+      if (!success) {
+        return res.status(404).json({ message: "Gruppo non trovato" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Autosave Route
+  app.post("/api/products/:id/autosave", isAuthenticated, async (req, res, next) => {
+    try {
+      // Solo admin e compilatori possono usare l'autosalvataggio
+      if (req.user?.role !== "amministratore" && req.user?.role !== "compilatore") {
+        return res.status(403).json({ message: "Non autorizzato" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID prodotto non valido" });
+      }
+      
+      const data = req.body;
+      if (!data) {
+        return res.status(400).json({ message: "Dati di autosalvataggio richiesti" });
+      }
+      
+      const success = await storage.autosaveProduct(id, data);
+      if (!success) {
+        return res.status(404).json({ message: "Prodotto non trovato" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.get("/api/products/:id/autosave", isAuthenticated, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID prodotto non valido" });
+      }
+      
+      const data = await storage.getProductAutosave(id);
+      res.json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Suggestions Route
+  app.get("/api/suggestions", isAuthenticated, async (req, res, next) => {
+    try {
+      const { field, prefix } = req.query;
+      
+      if (!field || !prefix || typeof field !== 'string' || typeof prefix !== 'string') {
+        return res.status(400).json({ message: "Campo e prefisso richiesti" });
+      }
+      
+      if (prefix.length < 3) {
+        return res.json([]);
+      }
+      
+      const suggestions = await storage.getSuggestions(field, prefix);
+      res.json(suggestions);
     } catch (error) {
       next(error);
     }
@@ -175,7 +390,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "ID non valido" });
       }
       
-      const updatedUser = await storage.updateUser(id, { approved: true });
+      const { allowedGroups } = req.body;
+      
+      // Se è stato fornito allowedGroups, assicurarsi che sia un array
+      const updateData: any = { approved: true };
+      if (allowedGroups) {
+        if (!Array.isArray(allowedGroups)) {
+          return res.status(400).json({ message: "allowedGroups deve essere un array" });
+        }
+        updateData.allowedGroups = allowedGroups;
+      }
+      
+      const updatedUser = await storage.updateUser(id, updateData);
       if (!updatedUser) {
         return res.status(404).json({ message: "Utente non trovato" });
       }
@@ -207,6 +433,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedUser) {
         return res.status(404).json({ message: "Utente non trovato" });
       }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Endpoint per aggiornare i gruppi assegnati a un utente
+  app.post("/api/admin/users/:id/update-groups", isAuthenticated, async (req, res, next) => {
+    try {
+      // Check if the user is an administrator
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Accesso non autorizzato" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID non valido" });
+      }
+      
+      const { allowedGroups } = req.body;
+      
+      // Verifica che allowedGroups sia un array
+      if (!Array.isArray(allowedGroups)) {
+        return res.status(400).json({ message: "allowedGroups deve essere un array" });
+      }
+      
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+      
+      // Verifica che l'utente sia un visualizzatore
+      if (user.role !== "visualizzatore") {
+        return res.status(400).json({ message: "Solo i visualizzatori possono avere gruppi assegnati" });
+      }
+      
+      const updatedUser = await storage.updateUser(id, { allowedGroups });
       
       res.json(updatedUser);
     } catch (error) {
