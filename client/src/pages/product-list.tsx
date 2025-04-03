@@ -5,12 +5,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import Sidebar from "@/components/sidebar";
+import QuickPreviewModal from "@/components/quick-preview-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Download, Edit, Eye, MoreVertical, Search, Trash2 } from "lucide-react";
+import { Download, Edit, Eye, FileSearch, MoreVertical, Search, Trash2 } from "lucide-react";
 import { TEMPLATE_COLORS } from "@/lib/constants";
 
 export default function ProductList() {
@@ -18,6 +19,8 @@ export default function ProductList() {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [previewProductId, setPreviewProductId] = useState<number | null>(null);
+  const [previewData, setPreviewData] = useState<{ product: any; details: any } | null>(null);
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   const { canEdit, canAdministrate } = useAuth();
@@ -125,6 +128,39 @@ export default function ProductList() {
         variant: "destructive",
       });
     }
+  };
+  
+  // Funzione per visualizzare l'anteprima rapida
+  const showQuickPreview = async (id: number) => {
+    try {
+      setPreviewProductId(id);
+      
+      // Fetch dati del prodotto e dettagli
+      const product: any = await apiRequest("GET", `/api/products/${id}`);
+      
+      // Basati sul tipo di prodotto, recupera i dettagli specifici
+      let details = null;
+      if (product && product.type === 'cosmetic') {
+        details = await apiRequest("GET", `/api/cosmetic-details/${id}`);
+      } else if (product && product.type === 'supplement') {
+        details = await apiRequest("GET", `/api/supplement-details/${id}`);
+      }
+      
+      setPreviewData({ product, details });
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante il caricamento dell'anteprima",
+        variant: "destructive",
+      });
+      setPreviewProductId(null);
+    }
+  };
+  
+  // Funzione per chiudere l'anteprima
+  const closePreview = () => {
+    setPreviewProductId(null);
+    setPreviewData(null);
   };
 
   return (
@@ -240,6 +276,14 @@ export default function ProductList() {
                                     <Button 
                                       variant="ghost" 
                                       size="icon"
+                                      onClick={() => showQuickPreview(product.id)}
+                                      title="Anteprima Rapida"
+                                    >
+                                      <FileSearch className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
                                       onClick={() => downloadPdf(product.id)}
                                       title="Esporta PDF"
                                     >
@@ -282,6 +326,14 @@ export default function ProductList() {
                                       title="Visualizza"
                                     >
                                       <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => showQuickPreview(product.id)}
+                                      title="Anteprima Rapida"
+                                    >
+                                      <FileSearch className="h-4 w-4" />
                                     </Button>
                                     <Button 
                                       variant="ghost" 
@@ -330,6 +382,16 @@ export default function ProductList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Modal per l'anteprima rapida */}
+      {previewProductId !== null && previewData && (
+        <QuickPreviewModal
+          product={previewData.product}
+          details={previewData.details}
+          isOpen={previewProductId !== null}
+          onClose={closePreview}
+        />
+      )}
     </div>
   );
 }
