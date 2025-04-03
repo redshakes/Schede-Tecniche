@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+:root {
+  --font-sans: 'Inter', sans-serif;
+}
+
+/* PrimeReact adjustments */
+.p-component {
+  font-family: var(--font-sans);
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: hsl(var(--muted));
+}
+
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight,
+.p-dropdown:not(.p-disabled).p-focus {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+}
+
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
+  background: hsl(var(--muted));
+}
+
+.p-inputtext:enabled:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+.p-button {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.p-button:enabled:hover {
+  background: hsl(var(--primary) / 0.9);
+  border-color: hsl(var(--primary) / 0.9);
+}
+
+.p-button.p-button-outlined {
+  background-color: transparent;
+  color: hsl(var(--primary));
+  border: 1px solid;
+}
+
+.p-button.p-button-outlined:enabled:hover {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  border: 1px solid;
+}

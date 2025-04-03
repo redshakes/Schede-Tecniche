@@ -1,0 +1,253 @@
+import { Control } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Card, CardContent } from "@/components/ui/card";
+
+type CosmeticFormProps = {
+  control: Control<any>;
+};
+
+export default function CosmeticForm({ control }: CosmeticFormProps) {
+  return (
+    <>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <h2 className="text-lg font-medium text-neutral-800 mb-4">Analisi Organolettica</h2>
+          
+          <div className="space-y-4">
+            <FormField
+              control={control}
+              name="details.color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stato/colore</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Inserisci stato/colore"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={control}
+              name="details.fragrance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profumazione</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Inserisci profumazione"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={control}
+              name="details.sensorial"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Percezione sensoriale</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Inserisci percezione sensoriale"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={control}
+              name="details.absorbability"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assorbibilità</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Inserisci assorbibilità"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <h2 className="text-lg font-medium text-neutral-800 mb-4">Analisi Chimico-Fisica e Microbiologica</h2>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={control}
+                name="details.ph"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>pH</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Inserisci pH"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={control}
+                name="details.viscosity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Viscosità (cps)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Inserisci viscosità"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={control}
+              name="details.cbt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CBT</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Inserisci CBT"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={control}
+              name="details.yeastAndMold"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lieviti e muffe</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Inserisci lieviti e muffe"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={control}
+              name="details.escherichiaColi"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Escherichia coli</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Inserisci escherichia coli"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={control}
+              name="details.pseudomonas"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pseudomonas auriginosa</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Inserisci pseudomonas auriginosa"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <h2 className="text-lg font-medium text-neutral-800 mb-4">Caratteristiche Principali</h2>
+          
+          <div className="space-y-4">
+            <FormField
+              control={control}
+              name="product.characteristics"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Inserisci le caratteristiche principali..."
+                      className="min-h-[120px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <h2 className="text-lg font-medium text-neutral-800 mb-4">Modo d'Uso</h2>
+          
+          <div className="space-y-4">
+            <FormField
+              control={control}
+              name="product.usage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Inserisci il modo d'uso..."
+                      className="min-h-[120px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
