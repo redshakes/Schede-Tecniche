@@ -211,6 +211,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API per ottenere tutti gli utenti in un gruppo
+  app.get("/api/groups/:id/users", isAuthenticated, async (req, res, next) => {
+    try {
+      // Solo gli amministratori possono vedere gli utenti di un gruppo
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Non autorizzato a visualizzare gli utenti del gruppo" });
+      }
+      
+      const groupId = parseInt(req.params.id);
+      if (isNaN(groupId)) {
+        return res.status(400).json({ message: "ID gruppo non valido" });
+      }
+      
+      const group = await storage.getGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Gruppo non trovato" });
+      }
+      
+      // Ottieni tutti gli utenti
+      const allUsers = await storage.getUsers();
+      
+      // Filtra gli utenti che hanno accesso a questo gruppo
+      const groupUsers = allUsers.filter(user => {
+        // Gli amministratori e i compilatori hanno accesso a tutti i gruppi
+        if (user.role === "amministratore" || user.role === "compilatore") {
+          return true;
+        }
+        
+        // I visualizzatori hanno accesso solo ai gruppi loro assegnati
+        if (user.role === "visualizzatore" && user.allowedGroups) {
+          return user.allowedGroups.includes(groupId.toString());
+        }
+        
+        return false;
+      });
+      
+      res.json(groupUsers);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // API per ottenere tutti i prodotti in un gruppo
+  app.get("/api/groups/:id/products", isAuthenticated, async (req, res, next) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      if (isNaN(groupId)) {
+        return res.status(400).json({ message: "ID gruppo non valido" });
+      }
+      
+      const group = await storage.getGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Gruppo non trovato" });
+      }
+      
+      // Se l'utente è visualizzatore, verifica che abbia accesso a questo gruppo
+      if (req.user?.role === "visualizzatore") {
+        const userAllowedGroups = req.user.allowedGroups || [];
+        if (!userAllowedGroups.includes(groupId.toString())) {
+          return res.status(403).json({ message: "Non hai accesso a questo gruppo" });
+        }
+      }
+      
+      // Ottieni i prodotti del gruppo
+      const products = await storage.getProducts(undefined, groupId);
+      res.json(products);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   app.post("/api/groups", isAuthenticated, async (req, res, next) => {
     try {
       // Solo admin e compilatori possono creare gruppi

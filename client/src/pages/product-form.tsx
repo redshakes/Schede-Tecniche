@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -10,6 +10,7 @@ import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Sidebar from "@/components/sidebar";
 import ProductHeader from "@/components/product-header";
 import CosmeticForm from "@/components/cosmetic-form";
@@ -45,6 +46,7 @@ const productSchema = z.object({
     warnings: z.string().optional(),
     conservationMethod: z.string().optional(),
     specialWarnings: z.string().optional(),
+    groupId: z.number().nullable().optional(),
   }),
   details: z.object({
     // Common properties
@@ -150,6 +152,25 @@ export default function ProductForm() {
     },
     enabled: !!id,
   });
+  
+  // Ottieni tutti i gruppi
+  const { data: groups = [] } = useQuery({
+    queryKey: ["/api/groups"],
+    queryFn: async () => {
+      const res = await fetch("/api/groups", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Errore nel caricamento dei gruppi");
+      return res.json();
+    }
+  });
+  
+  // Prepara le opzioni dei gruppi per il select
+  const groupsOptions = groups.map((group: any) => (
+    <SelectItem key={group.id} value={group.id.toString()}>
+      {group.name}
+    </SelectItem>
+  ));
   
   // Update form when product data is loaded
   useEffect(() => {
@@ -285,6 +306,30 @@ export default function ProductForm() {
                           <Input
                             {...form.register("product.subtitle")}
                             placeholder="Inserisci sottotitolo"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">Gruppo</label>
+                          <Controller
+                            name="product.groupId"
+                            control={form.control}
+                            render={({ field }) => (
+                              <div>
+                                <Select 
+                                  onValueChange={(value) => field.onChange(value !== "null" ? parseInt(value) : null)}
+                                  value={field.value ? field.value.toString() : "null"}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleziona gruppo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="null">Nessun gruppo</SelectItem>
+                                    {groupsOptions}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
                           />
                         </div>
                         

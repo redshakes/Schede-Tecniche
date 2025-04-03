@@ -94,33 +94,35 @@ export default function ProductHeader({ title, productId, onSave, isSaving }: Pr
 
   return (
     <header className="bg-white shadow">
-      <div className="mx-auto px-6 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-800">{title}</h1>
-        
-        <div className="flex items-center space-x-4">
-          <Button onClick={onSave} disabled={isSaving}>
-            {isSaving ? (
-              <>
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em]"></span>
-                Salvataggio...
-              </>
-            ) : (
-              <>
-                <SaveIcon className="mr-2 h-4 w-4" />
-                Salva
-              </>
-            )}
-          </Button>
+      <div className="mx-auto px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">{title}</h1>
           
-          <Button variant="outline" onClick={generatePdf} disabled={!productId}>
-            <FileDown className="mr-2 h-4 w-4" />
-            <span>Genera PDF</span>
-          </Button>
-          
-          <Button variant="outline" onClick={exportMd} disabled={!productId}>
-            <FileText className="mr-2 h-4 w-4" />
-            <span>Esporta MD</span>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <Button className="w-full sm:w-auto" onClick={onSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em]"></span>
+                  Salvataggio...
+                </>
+              ) : (
+                <>
+                  <SaveIcon className="mr-2 h-4 w-4" />
+                  Salva
+                </>
+              )}
+            </Button>
+            
+            <Button className="flex-1 sm:flex-initial" variant="outline" onClick={generatePdf} disabled={!productId}>
+              <FileDown className="mr-2 h-4 w-4" />
+              <span className="whitespace-nowrap">Genera PDF</span>
+            </Button>
+            
+            <Button className="flex-1 sm:flex-initial" variant="outline" onClick={exportMd} disabled={!productId}>
+              <FileText className="mr-2 h-4 w-4" />
+              <span className="whitespace-nowrap">Esporta PDF</span>
+            </Button>
+          </div>
         </div>
       </div>
     </header>

@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth-page";
 import ProductList from "@/pages/product-list";
 import ProductForm from "@/pages/product-form";
 import AdminUsersPage from "@/pages/admin-users";
+import AdminGroupsPage from "@/pages/admin-groups";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +30,9 @@ function Router() {
       </Route>
       <Route path="/admin/users">
         {() => <ProtectedRoute path="/admin/users" component={AdminUsersPage} />}
+      </Route>
+      <Route path="/admin/groups">
+        {() => <ProtectedRoute path="/admin/groups" component={AdminGroupsPage} />}
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

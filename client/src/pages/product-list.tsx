@@ -250,9 +250,9 @@ export default function ProductList() {
                                       <Eye className="mr-2 h-4 w-4" />
                                       <span>Visualizza</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => downloadMarkdown(product.id)}>
+                                    <DropdownMenuItem onClick={() => downloadPdf(product.id)}>
                                       <Download className="mr-2 h-4 w-4" />
-                                      <span>Esporta MD</span>
+                                      <span>Esporta PDF</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem 
                                       className="text-red-600" 

@@ -112,14 +112,25 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
           </Button>
 
           {canAdministrate() && (
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => handleNavigate("/admin/users")}
-            >
-              <UserCog className="h-4 w-4 mr-3" />
-              <span>Gestione Utenti</span>
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigate("/admin/users")}
+              >
+                <UserCog className="h-4 w-4 mr-3" />
+                <span>Gestione Utenti</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigate("/admin/groups")}
+              >
+                <i className="pi pi-users mr-3"></i>
+                <span>Gestione Gruppi</span>
+              </Button>
+            </>
           )}
         </div>
       </nav>
@@ -158,7 +169,7 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-72">
+            <SheetContent side="left" className="p-0 w-72" hideCloseButton={true}>
               <div className="flex flex-col h-full">
                 <SidebarContent />
               </div>
