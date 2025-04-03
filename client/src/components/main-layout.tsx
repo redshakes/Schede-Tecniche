@@ -40,8 +40,11 @@ export default function MainLayout({
       <div className="min-h-screen bg-background">
         <header className="w-full p-4 sticky top-0 z-30 bg-background/90 backdrop-blur-sm border-b">
           <div className="container flex justify-between items-center">
-            <h1 className="text-xl font-bold">{title}</h1>
-            <ThemeToggle />
+            <div className="w-[40px]"></div>
+            <h1 className="text-xl font-bold flex-1 text-center">{title}</h1>
+            <div className="flex justify-end items-center w-[40px]">
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <main className="container mx-auto px-4 max-w-full overflow-x-hidden">
@@ -170,10 +173,10 @@ export default function MainLayout({
       <div className="min-h-screen bg-background">
         <header className="w-full p-4 sticky top-0 z-30 bg-background/90 backdrop-blur-sm border-b">
           <div className="container flex justify-between items-center">
-            <div className="flex items-center">
+            <div className="flex items-center w-[40px]">
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="mr-2">
+                  <Button variant="outline" size="icon">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
@@ -183,9 +186,11 @@ export default function MainLayout({
                   </div>
                 </SheetContent>
               </Sheet>
-              <h1 className="text-xl font-bold">{title}</h1>
             </div>
-            <ThemeToggle />
+            <h1 className="text-xl font-bold flex-1 text-center">{title}</h1>
+            <div className="flex justify-end items-center w-[40px]">
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <main className="container mx-auto px-4 max-w-full overflow-x-hidden">
@@ -206,8 +211,11 @@ export default function MainLayout({
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <header className="w-full p-4 sticky top-0 z-30 bg-background/90 backdrop-blur-sm border-b">
           <div className="container flex justify-between items-center">
-            <h1 className="text-xl font-bold">{title}</h1>
-            <ThemeToggle />
+            <div className="w-[40px]"></div>
+            <h1 className="text-xl font-bold flex-1 text-center">{title}</h1>
+            <div className="flex justify-end items-center w-[40px]">
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <main className="container mx-auto px-4 max-w-full overflow-x-hidden">
