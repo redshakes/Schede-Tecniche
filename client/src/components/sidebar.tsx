@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { UserCog } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { UserCog, Menu, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SidebarProps = {
   activeType: string;
@@ -13,6 +16,8 @@ type SidebarProps = {
 export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
   const [location, navigate] = useLocation();
   const { user, logoutMutation, canAdministrate } = useAuth();
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -26,13 +31,27 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
         .toUpperCase()
         .substring(0, 2)
     : "U";
-
-  return (
-    <aside className="w-64 bg-white shadow-md z-10 flex flex-col h-screen">
-      <div className="p-4 border-b border-neutral-200">
+    
+  // Chiudi la sidebar quando si clicca su un elemento di navigazione (solo su mobile)
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (isMobile) {
+      setIsOpen(false);
+    }
+  };
+  
+  // Componente del contenuto della sidebar
+  const SidebarContent = () => (
+    <>
+      <div className="p-4 border-b border-neutral-200 flex justify-between items-center">
         <h1 className="text-xl font-bold text-primary flex items-center">
           <span>LFA Schede Tecniche</span>
         </h1>
+        {isMobile && (
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4 px-2">
@@ -68,7 +87,7 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start"
-            onClick={() => navigate("/")}
+            onClick={() => handleNavigate("/")}
           >
             <i className="pi pi-home mr-3"></i>
             <span>Dashboard</span>
@@ -77,7 +96,7 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start"
-            onClick={() => navigate("/products/new")}
+            onClick={() => handleNavigate("/products/new")}
           >
             <i className="pi pi-plus mr-3"></i>
             <span>Nuova Scheda</span>
@@ -86,7 +105,7 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start"
-            onClick={() => navigate("/products")}
+            onClick={() => handleNavigate("/products")}
           >
             <i className="pi pi-list mr-3"></i>
             <span>Elenco Schede</span>
@@ -96,7 +115,7 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
             <Button
               variant="ghost"
               className="w-full justify-start"
-              onClick={() => navigate("/admin/users")}
+              onClick={() => handleNavigate("/admin/users")}
             >
               <UserCog className="h-4 w-4 mr-3" />
               <span>Gestione Utenti</span>
@@ -125,6 +144,35 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
           </div>
         </div>
       </div>
+    </>
+  );
+
+  // Se mobile, mostra la sidebar in un componente Sheet (drawer)
+  if (isMobile) {
+    return (
+      <>
+        <div className="fixed top-0 left-0 z-30 p-4">
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-72">
+              <div className="flex flex-col h-full">
+                <SidebarContent />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </>
+    );
+  }
+
+  // Altrimenti, mostra la sidebar standard
+  return (
+    <aside className="w-64 bg-white shadow-md z-10 flex flex-col h-screen">
+      <SidebarContent />
     </aside>
   );
 }

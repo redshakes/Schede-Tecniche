@@ -24,7 +24,7 @@ export default function ProductList() {
   const { data: products = [], isLoading, refetch } = useQuery({
     queryKey: ["/api/products", typeFilter],
     queryFn: async ({ queryKey }) => {
-      const url = typeFilter 
+      const url = typeFilter && typeFilter !== "all" 
         ? `/api/products?type=${typeFilter}` 
         : "/api/products";
       const res = await fetch(url, {
@@ -160,7 +160,7 @@ export default function ProductList() {
                     <SelectValue placeholder="Tutti i tipi" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tutti i tipi</SelectItem>
+                    <SelectItem value="all">Tutti i tipi</SelectItem>
                     <SelectItem value="cosmetic">Cosmetici</SelectItem>
                     <SelectItem value="supplement">Integratori</SelectItem>
                   </SelectContent>

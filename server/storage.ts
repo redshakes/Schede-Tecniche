@@ -153,6 +153,87 @@ export class MemStorage implements IStorage {
 
     // Creare 4 utenti iniziali (uno per ogni ruolo)
     this.createInitialUsers();
+    
+    // Creare prodotti di esempio
+    this.createSampleProducts();
+  }
+  
+  // Crea prodotti di esempio per testing
+  private async createSampleProducts() {
+    // Primo prodotto - Cosmetico
+    const cosmeticProduct: InsertProduct = {
+      name: "Crema Idratante Antirughe",
+      subtitle: "Con Acido Ialuronico",
+      type: "cosmetic",
+      code: "COS-001",
+      ref: "LFA-COS-001",
+      date: new Date().toISOString().split('T')[0],
+      content: "50ml",
+      category: "Creme Viso",
+      packaging: "Vasetto in vetro con tappo in alluminio",
+      batch: "LFA2023-01",
+      cpnp: "IT12345",
+      ingredients: "Aqua, Glycerin, Hydroxyethylcellulose, Sodium Hyaluronate, Tocopherol, Parfum, Phenoxyethanol",
+      naturalActives: "Acido Ialuronico, Vitamina E",
+      functionalActives: "Complesso idratante, Antiossidanti",
+      characteristics: "Crema dalla texture leggera e facilmente assorbibile",
+      usage: "Applicare mattina e sera sul viso pulito e asciutto con movimenti circolari",
+      warnings: "Evitare il contatto con gli occhi",
+      groupId: 1,
+      isComplete: true
+    };
+    
+    const createdCosmetic = await this.createProduct(cosmeticProduct);
+    
+    const cosmeticDetailsData: InsertCosmeticDetails = {
+      productId: createdCosmetic.id,
+      color: "Bianco perlescente",
+      fragrance: "Delicata, note floreali",
+      sensorial: "Texture leggera e setosa",
+      absorbability: "Rapido assorbimento",
+      ph: "5.5",
+      viscosity: "Media",
+      cbt: "< 100 UFC/g",
+      yeastAndMold: "< 10 UFC/g",
+      escherichiaColi: "Assente",
+      pseudomonas: "Assente"
+    };
+    
+    await this.createCosmeticDetails(cosmeticDetailsData);
+    
+    // Secondo prodotto - Integratore
+    const supplementProduct: InsertProduct = {
+      name: "Vitamina C Complex",
+      subtitle: "Con Rosa Canina e Bioflavonoidi",
+      type: "supplement",
+      code: "SUP-001",
+      ref: "LFA-SUP-001",
+      date: new Date().toISOString().split('T')[0],
+      content: "60 compresse",
+      category: "Integratori Vitaminici",
+      packaging: "Flacone in HDPE con tappo di sicurezza",
+      batch: "LFA2023-02",
+      authMinistry: "IT-AUT-12345",
+      ingredients: "Acido L-ascorbico, Estratto secco di Rosa canina, Bioflavonoidi da agrumi, Cellulosa microcristallina, Magnesio stearato",
+      naturalActives: "Rosa canina, Bioflavonoidi",
+      functionalActives: "Vitamina C",
+      characteristics: "Integratore alimentare con vitamina C ad alta biodisponibilità",
+      warnings: "Non superare la dose giornaliera consigliata. Tenere fuori dalla portata dei bambini di età inferiore a 3 anni",
+      conservationMethod: "Conservare in luogo fresco e asciutto, al riparo dalla luce",
+      groupId: 1,
+      isComplete: true
+    };
+    
+    const createdSupplement = await this.createProduct(supplementProduct);
+    
+    const supplementDetailsData: InsertSupplementDetails = {
+      productId: createdSupplement.id,
+      nutritionalInfo: "Vitamina C: 1000 mg (1250% VNR*)\nRosa canina e.s.: 200 mg\nBioflavonoidi: 100 mg\n*VNR: Valori Nutritivi di Riferimento",
+      indications: "Integratore alimentare utile in caso di carenza o aumentato fabbisogno di vitamina C. Contribuisce alla normale funzione del sistema immunitario e alla protezione delle cellule dallo stress ossidativo",
+      dosage: "1 compressa al giorno, preferibilmente ai pasti"
+    };
+    
+    await this.createSupplementDetails(supplementDetailsData);
   }
 
   private async createInitialUsers() {
