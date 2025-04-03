@@ -128,13 +128,13 @@ export default function ProductList() {
   };
 
   return (
-    <div className="flex h-screen bg-neutral-50">
+    <div className="flex h-screen bg-background">
       <Sidebar activeType={activeType} setActiveType={setActiveType} />
       
       <main className="flex-1 overflow-y-auto">
-        <header className="bg-white shadow">
+        <header className="bg-background shadow border-b border-border">
           <div className="mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-neutral-800">Elenco Schede Tecniche</h1>
+            <h1 className="text-2xl font-bold text-foreground">Elenco Schede Tecniche</h1>
             
             {canEdit() && (
               <Button onClick={() => navigate("/products/new")}>
@@ -146,7 +146,7 @@ export default function ProductList() {
         </header>
         
         <div className="container mx-auto py-6 px-4 lg:px-8">
-          <div className="bg-white shadow rounded-lg">
+          <div className="bg-card shadow rounded-lg">
             <div className="p-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div className="relative w-full sm:w-64">
@@ -178,7 +178,7 @@ export default function ProductList() {
                   </div>
                 </div>
               ) : filteredProducts.length === 0 ? (
-                <div className="text-center py-8 text-neutral-500">
+                <div className="text-center py-8 text-muted-foreground">
                   {searchQuery 
                     ? "Nessun prodotto corrisponde alla ricerca" 
                     : "Nessun prodotto disponibile"}
@@ -186,43 +186,43 @@ export default function ProductList() {
               ) : (
                 <>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-neutral-200">
-                      <thead className="bg-neutral-50">
+                    <table className="min-w-full divide-y divide-border">
+                      <thead className="bg-muted">
                         <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Nome Prodotto
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Tipo
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Codice
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Data Creazione
                           </th>
-                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Azioni
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-neutral-200">
+                      <tbody className="bg-card divide-y divide-border">
                         {filteredProducts.map((product: any) => (
-                          <tr key={product.id} className="hover:bg-neutral-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-800">
+                          <tr key={product.id} className="hover:bg-muted/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               {product.name}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
                               <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                 product.type === 'cosmetic' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'
                               }`}>
                                 {product.type === 'cosmetic' ? 'Cosmetico' : 'Integratore'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                               {product.code || '-'}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                               {new Date(product.createdAt).toLocaleDateString('it-IT')}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -302,7 +302,7 @@ export default function ProductList() {
                   </div>
                   
                   <div className="mt-6 flex items-center justify-between">
-                    <div className="text-sm text-neutral-700">
+                    <div className="text-sm text-muted-foreground">
                       Mostrando <span>1</span> a <span>{filteredProducts.length}</span> di <span>{filteredProducts.length}</span> risultati
                     </div>
                   </div>

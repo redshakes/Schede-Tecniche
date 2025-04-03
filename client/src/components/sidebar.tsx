@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { UserCog, Menu, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type SidebarProps = {
   activeType: string;
@@ -44,7 +45,7 @@ export default function Sidebar({ activeType, setActiveType, isReadOnly = false 
   // Componente del contenuto della sidebar
   const SidebarContent = () => (
     <>
-      <div className="p-4 border-b border-neutral-200 flex justify-between items-center">
+      <div className="p-4 border-b border-border flex justify-between items-center">
         <h1 className="text-xl font-bold text-primary flex items-center">
           <span>LFA Schede Tecniche</span>
         </h1>
@@ -141,21 +142,24 @@ export default function Sidebar({ activeType, setActiveType, isReadOnly = false 
       <Separator />
 
       <div className="p-4">
-        <div className="flex items-center">
-          <Avatar className="h-8 w-8 bg-primary text-white">
-            <AvatarFallback>{userInitials}</AvatarFallback>
-          </Avatar>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-neutral-700">{user?.name}</p>
-            <Button
-              variant="link"
-              size="sm"
-              className="h-auto p-0 text-xs font-medium text-neutral-500 hover:text-neutral-700"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center">
+            <Avatar className="h-8 w-8 bg-primary text-white">
+              <AvatarFallback>{userInitials}</AvatarFallback>
+            </Avatar>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-neutral-700">{user?.name}</p>
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs font-medium text-neutral-500 hover:text-neutral-700"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </div>
           </div>
+          <ThemeToggle />
         </div>
       </div>
     </>
@@ -185,7 +189,7 @@ export default function Sidebar({ activeType, setActiveType, isReadOnly = false 
 
   // Altrimenti, mostra la sidebar standard
   return (
-    <aside className="w-64 bg-white shadow-md z-10 flex flex-col h-screen">
+    <aside className="w-64 bg-background shadow-md z-10 flex flex-col h-screen border-r border-border">
       <SidebarContent />
     </aside>
   );
