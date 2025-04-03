@@ -7,7 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "../lib/queryClient";
-import { CheckCircle, XCircle, UserCog, User as UserIcon, UsersRound } from "lucide-react";
+import { CheckCircle, XCircle, UserCog, User as UserIcon, UsersRound, Eye } from "lucide-react";
 import { useLocation } from "wouter";
 import { 
   Dialog,
@@ -227,8 +227,19 @@ export default function AdminUsersPage() {
         const user = row.original;
         return (
           <div className="flex gap-2">
-            <Badge variant={user.role === "amministratore" ? "destructive" : user.role === "compilatore" ? "default" : "secondary"}>
-              {user.role === "amministratore" ? "Amministratore" : user.role === "compilatore" ? "Compilatore" : "Visualizzatore"}
+            <Badge variant={
+              user.role === "amministratore" ? "destructive" : 
+              user.role === "compilatore" ? "default" : 
+              user.role === "visualizzatore" ? "secondary" : 
+              "outline"
+            }>
+              {user.role === "amministratore" 
+                ? "Amministratore" 
+                : user.role === "compilatore" 
+                ? "Compilatore" 
+                : user.role === "visualizzatore" 
+                ? "Visualizzatore" 
+                : "Guest"}
             </Badge>
             <div className="flex gap-1">
               <Button 
@@ -248,6 +259,15 @@ export default function AdminUsersPage() {
                 title="Imposta come Compilatore"
               >
                 <UserIcon className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                disabled={user.role === "visualizzatore"}
+                onClick={() => handleChangeRole(user.id, "visualizzatore")}
+                title="Imposta come Visualizzatore"
+              >
+                <Eye className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -285,6 +305,16 @@ export default function AdminUsersPage() {
                   >
                     <UsersRound className="h-4 w-4 mr-1" />
                     Approva con Gruppi
+                  </Button>
+                )}
+                {user.role === "guest" && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleChangeRole(user.id, "visualizzatore")}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Converti in Visualizzatore
                   </Button>
                 )}
               </div>

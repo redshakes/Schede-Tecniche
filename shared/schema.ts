@@ -17,7 +17,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull(),
   name: text("name").notNull(),
-  role: text("role").notNull().default("visualizzatore"), // "amministratore", "compilatore", "visualizzatore"
+  role: text("role").notNull().default("guest"), // "amministratore", "compilatore", "visualizzatore", "guest"
   approved: boolean("approved").notNull().default(false),
   allowedGroups: text("allowed_groups").array(), // Array of group IDs the user has access to (for visualizzatore)
   createdAt: timestamp("created_at").defaultNow().notNull(),

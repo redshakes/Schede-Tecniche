@@ -97,7 +97,7 @@ export function setupAuth(app: Express) {
         password: await hashPassword(password),
         email,
         name,
-        role: "visualizzatore", // Default role
+        role: "guest", // Ruolo provvisorio per utenti in attesa di approvazione
         approved: false
       });
 
@@ -202,7 +202,7 @@ export function setupAuth(app: Express) {
       const userId = parseInt(req.params.id);
       const { role } = req.body;
       
-      if (!role || !["amministratore", "compilatore", "visualizzatore"].includes(role)) {
+      if (!role || !["amministratore", "compilatore", "visualizzatore", "guest"].includes(role)) {
         return res.status(400).json({ message: "Ruolo non valido" });
       }
       

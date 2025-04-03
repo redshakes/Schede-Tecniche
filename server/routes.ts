@@ -425,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { role } = req.body;
-      if (!role || !["amministratore", "compilatore", "visualizzatore"].includes(role)) {
+      if (!role || !["amministratore", "compilatore", "visualizzatore", "guest"].includes(role)) {
         return res.status(400).json({ message: "Ruolo non valido" });
       }
       

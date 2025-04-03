@@ -27,7 +27,7 @@ type RegisterData = {
   password: string;
   email: string;
   name: string;
-  role: "amministratore" | "compilatore" | "visualizzatore";
+  role?: string; // Aggiungiamo il campo opzionale role
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -142,8 +142,16 @@ export function canEdit(user: User | null): boolean {
   return hasRole(user, ["amministratore", "compilatore"]);
 }
 
+export function canView(user: User | null): boolean {
+  return hasRole(user, ["amministratore", "compilatore", "visualizzatore"]);
+}
+
 export function canAdministrate(user: User | null): boolean {
   return hasRole(user, "amministratore");
+}
+
+export function isGuest(user: User | null): boolean {
+  return hasRole(user, "guest");
 }
 
 export function useAuth() {
@@ -156,6 +164,8 @@ export function useAuth() {
     // Aggiungiamo le funzioni di verifica permessi
     hasRole: (role: string | string[]) => hasRole(context.user, role),
     canEdit: () => canEdit(context.user),
+    canView: () => canView(context.user),
     canAdministrate: () => canAdministrate(context.user),
+    isGuest: () => isGuest(context.user),
   };
 }

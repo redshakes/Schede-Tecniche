@@ -23,13 +23,15 @@ const registerSchema = z.object({
   password: z.string().min(6, "La password deve contenere almeno 6 caratteri"),
   email: z.string().email("Email non valida"),
   name: z.string().min(1, "Nome è obbligatorio"),
-  role: z.enum(["amministratore", "compilatore", "visualizzatore"], {
-    errorMap: () => ({ message: "Seleziona un ruolo valido" }),
-  }),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
 type RegisterValues = z.infer<typeof registerSchema>;
+
+// Estendiamo il tipo per includere il ruolo durante la registrazione
+type RegisterDataWithRole = RegisterValues & {
+  role?: string;
+};
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
@@ -54,7 +56,6 @@ export default function AuthPage() {
       password: "",
       email: "",
       name: "",
-      role: "visualizzatore",
     },
   });
 
@@ -66,7 +67,12 @@ export default function AuthPage() {
   };
 
   const onRegister = (data: RegisterValues) => {
-    registerMutation.mutate(data);
+    // Aggiungiamo automaticamente il ruolo "guest" per i nuovi utenti
+    const registerData: RegisterDataWithRole = {
+      ...data,
+      role: "guest" // Impostiamo il ruolo "guest" di default
+    };
+    registerMutation.mutate(registerData);
   };
 
   // Redirect to home if logged in
@@ -249,29 +255,14 @@ export default function AuthPage() {
                       )}
                     />
                     
-                    <FormField
-                      control={registerForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ruolo</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleziona un ruolo" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="visualizzatore">Visualizzatore</SelectItem>
-                              <SelectItem value="compilatore">Compilatore</SelectItem>
-                              <SelectItem value="amministratore">Amministratore</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
+
+                    <div className="border-l-4 border-amber-500 bg-amber-50 p-3 mb-4">
+                      <p className="text-sm text-amber-700">
+                        <strong>Nota:</strong> Dopo la registrazione, il tuo account sarà in attesa di approvazione da parte di un amministratore. Riceverai una notifica quando il tuo account sarà approvato.
+                      </p>
+                    </div>
+                    
                     <Button
                       type="submit"
                       className="w-full"
