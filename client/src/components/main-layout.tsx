@@ -15,9 +15,18 @@ import { useAuth } from "@/hooks/use-auth";
 type MainLayoutProps = {
   children: ReactNode;
   title: string;
+  activeType?: string;
+  setActiveType?: (type: string) => void;
+  isReadOnly?: boolean;
 };
 
-export default function MainLayout({ children, title }: MainLayoutProps) {
+export default function MainLayout({ 
+  children, 
+  title, 
+  activeType = "", 
+  setActiveType = () => {}, 
+  isReadOnly = false 
+}: MainLayoutProps) {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
@@ -56,8 +65,9 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-72" hideCloseButton={true}>
                   <Sidebar 
-                    activeType="" 
-                    setActiveType={() => {}} 
+                    activeType={activeType} 
+                    setActiveType={setActiveType}
+                    isReadOnly={isReadOnly}
                   />
                 </SheetContent>
               </Sheet>
@@ -79,8 +89,9 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar 
-        activeType="" 
-        setActiveType={() => {}} 
+        activeType={activeType} 
+        setActiveType={setActiveType}
+        isReadOnly={isReadOnly}
       />
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <header className="w-full p-4 sticky top-0 z-30 bg-background/90 backdrop-blur-sm border-b">
