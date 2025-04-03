@@ -62,7 +62,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const type = req.query.type as string | undefined;
       const groupId = req.query.groupId ? parseInt(req.query.groupId as string) : undefined;
       
-      // Se l'utente è visualizzatore, controlla che abbia accesso ai gruppi richiesti
+      // Se l'utente è visualizzatore, controlla che abbia accesso ai gruppi richiesti 
+      // e mostra solo prodotti approvati
       if (req.user?.role === "visualizzatore") {
         // Se è stato specificato un groupId, verifica che l'utente abbia accesso
         if (groupId !== undefined) {
@@ -70,11 +71,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (!userAllowedGroups.includes(groupId.toString())) {
             return res.status(403).json({ message: "Non hai accesso a questo gruppo di schede" });
           }
+          
+          // Mostra solo prodotti approvati per visualizzatori
+          const products = await storage.getProducts(type, groupId, true);
+          return res.json(products);
         } else {
           // Se non è stato specificato un groupId, filtra in base ai gruppi consentiti all'utente
+          // e mostra solo prodotti approvati
           const userAllowedGroups = req.user.allowedGroups || [];
           if (userAllowedGroups.length > 0) {
-            const allProducts = await storage.getProducts(type);
+            const allProducts = await storage.getProducts(type, undefined, true);
             const filteredProducts = allProducts.filter(product => 
               product.groupId !== null && 
               userAllowedGroups.includes(product.groupId.toString())
@@ -106,10 +112,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Se l'utente è visualizzatore, verifica che abbia accesso a questo gruppo
-      if (req.user?.role === "visualizzatore" && product.groupId) {
-        const userAllowedGroups = req.user.allowedGroups || [];
-        if (!userAllowedGroups.includes(product.groupId.toString())) {
-          return res.status(403).json({ message: "Non hai accesso a questa scheda" });
+      // e verifica che il prodotto sia approvato
+      if (req.user?.role === "visualizzatore") {
+        // Verifica accesso al gruppo
+        if (product.groupId) {
+          const userAllowedGroups = req.user.allowedGroups || [];
+          if (!userAllowedGroups.includes(product.groupId.toString())) {
+            return res.status(403).json({ message: "Non hai accesso a questa scheda" });
+          }
+        }
+        
+        // Verifica che il prodotto sia approvato
+        if (!product.isApproved) {
+          return res.status(403).json({ message: "Questa scheda non è stata ancora approvata" });
         }
       }
       
@@ -267,14 +282,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Se l'utente è visualizzatore, verifica che abbia accesso a questo gruppo
+      // e mostra solo prodotti approvati
       if (req.user?.role === "visualizzatore") {
         const userAllowedGroups = req.user.allowedGroups || [];
         if (!userAllowedGroups.includes(groupId.toString())) {
           return res.status(403).json({ message: "Non hai accesso a questo gruppo" });
         }
+        
+        // Per i visualizzatori, mostra solo i prodotti approvati
+        const products = await storage.getProducts(undefined, groupId, true);
+        return res.json(products);
       }
       
-      // Ottieni i prodotti del gruppo
+      // Ottieni i prodotti del gruppo (tutti per admin e compilatori)
       const products = await storage.getProducts(undefined, groupId);
       res.json(products);
     } catch (error) {
@@ -429,6 +449,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const suggestions = await storage.getSuggestions(field, prefix);
       res.json(suggestions);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Product Approval Routes
+  app.post("/api/products/:id/approve", isAuthenticated, async (req, res, next) => {
+    try {
+      // Solo gli amministratori possono approvare i prodotti
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Non autorizzato ad approvare schede tecniche" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID prodotto non valido" });
+      }
+      
+      // Verifica prima la completezza del prodotto
+      const isComplete = await storage.checkProductCompleteness(id);
+      if (!isComplete) {
+        return res.status(400).json({ message: "Impossibile approvare: la scheda tecnica non è completa" });
+      }
+      
+      // Procedi con l'approvazione
+      const product = await storage.approveProduct(id, req.user.id);
+      if (!product) {
+        return res.status(404).json({ message: "Prodotto non trovato" });
+      }
+      
+      res.json({ message: "Scheda tecnica approvata con successo", product });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.post("/api/products/:id/unapprove", isAuthenticated, async (req, res, next) => {
+    try {
+      // Solo gli amministratori possono rimuovere l'approvazione dai prodotti
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Non autorizzato a rimuovere l'approvazione dalle schede tecniche" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID prodotto non valido" });
+      }
+      
+      const product = await storage.unapproveProduct(id);
+      if (!product) {
+        return res.status(404).json({ message: "Prodotto non trovato" });
+      }
+      
+      res.json({ message: "Approvazione rimossa con successo", product });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.get("/api/products/:id/check-completeness", isAuthenticated, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID prodotto non valido" });
+      }
+      
+      const isComplete = await storage.checkProductCompleteness(id);
+      res.json({ isComplete });
     } catch (error) {
       next(error);
     }

@@ -54,6 +54,9 @@ export const products = pgTable("products", {
   specialWarnings: text("special_warnings"),
   groupId: integer("group_id").references(() => groups.id), // Group this product belongs to
   isComplete: boolean("is_complete").notNull().default(false), // Whether this product sheet is complete
+  isApproved: boolean("is_approved").notNull().default(false), // Whether this product is approved by an admin
+  approvedBy: integer("approved_by").references(() => users.id), // User ID of the admin who approved
+  approvedDate: timestamp("approved_date"), // When the product was approved
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   lastAutosave: jsonb("last_autosave"), // Autosaved content

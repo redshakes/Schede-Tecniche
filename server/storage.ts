@@ -24,11 +24,17 @@ export interface IStorage {
   // Product operations
   createProduct(product: InsertProduct): Promise<Product>;
   getProduct(id: number): Promise<Product | undefined>;
-  getProducts(type?: string, groupId?: number): Promise<Product[]>;
+  getProducts(type?: string, groupId?: number, approvedOnly?: boolean): Promise<Product[]>; // approvedOnly per visualizzatori
   updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
   autosaveProduct(id: number, data: any): Promise<boolean>;
   getProductAutosave(id: number): Promise<any>;
+  
+  // Product completion and approval operations
+  checkProductCompleteness(id: number): Promise<boolean>;
+  updateProductCompleteness(id: number): Promise<Product | undefined>;
+  approveProduct(productId: number, userId: number): Promise<Product | undefined>;
+  unapproveProduct(productId: number): Promise<Product | undefined>;
   
   // Cosmetic details operations
   createCosmeticDetails(details: InsertCosmeticDetails): Promise<CosmeticDetails>;
@@ -61,6 +67,43 @@ export class MemStorage implements IStorage {
   private supplementId: number;
   private groupId: number;
   sessionStore: session.Store;
+  
+  constructor() {
+    this.users = new Map();
+    this.products = new Map();
+    this.cosmeticDetails = new Map();
+    this.supplementDetails = new Map();
+    this.groups = new Map();
+    this.fieldValues = new Map();
+    this.userId = 1;
+    this.productId = 1;
+    this.cosmeticId = 1;
+    this.supplementId = 1;
+    this.groupId = 1;
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // 24h
+    });
+
+    // Setup iniziale con dati di esempio e configurazione
+    this.initializeData();
+  }
+  
+  // Metodo per inizializzare tutti i dati 
+  private async initializeData() {
+    // Crea utenti
+    await this.createInitialUsers();
+    
+    // Crea prodotti di esempio
+    await this.createSampleProducts();
+    
+    // Configura l'accesso del visualizzatore al gruppo predefinito
+    const users = await this.getUsers();
+    const visualizzatore = users.find(user => user.role === 'visualizzatore');
+    if (visualizzatore) {
+      visualizzatore.allowedGroups = ["1"]; // Assegna l'accesso al gruppo con ID 1
+      this.users.set(visualizzatore.id, visualizzatore);
+    }
+  }
   
   // Implementazione metodi dei gruppi
   async createGroup(group: InsertGroup): Promise<Group> {
@@ -103,59 +146,33 @@ export class MemStorage implements IStorage {
     return this.groups.delete(id);
   }
   
-  // Metodi per l'autosalvataggio dei prodotti
+  // Metodo per ottenere suggerimenti
+  async getSuggestions(field: string, prefix: string): Promise<string[]> {
+    if (!this.fieldValues.has(field)) {
+      return [];
+    }
+    
+    const prefixLower = prefix.toLowerCase();
+    const fieldSet = this.fieldValues.get(field)!;
+    
+    return Array.from(fieldSet)
+      .filter(value => value.toLowerCase().includes(prefixLower))
+      .slice(0, 10); // limit results
+  }
+
+  // Autosave
   async autosaveProduct(id: number, data: any): Promise<boolean> {
-    const product = this.products.get(id);
+    const product = await this.getProduct(id);
     if (!product) return false;
     
     product.lastAutosave = data;
-    product.updatedAt = new Date();
-    
     this.products.set(id, product);
     return true;
   }
   
   async getProductAutosave(id: number): Promise<any> {
-    const product = this.products.get(id);
-    if (!product) return null;
-    
-    return product.lastAutosave;
-  }
-  
-  // Metodo per i suggerimenti in base ai caratteri digitati
-  async getSuggestions(field: string, prefix: string): Promise<string[]> {
-    if (!this.fieldValues.has(field) || prefix.length < 3) {
-      return [];
-    }
-    
-    const values = this.fieldValues.get(field)!;
-    const prefixLower = prefix.toLowerCase();
-    return Array.from(values)
-      .filter(value => value.toLowerCase().includes(prefixLower))
-      .slice(0, 10); // limit results
-  }
-
-  constructor() {
-    this.users = new Map();
-    this.products = new Map();
-    this.cosmeticDetails = new Map();
-    this.supplementDetails = new Map();
-    this.groups = new Map();
-    this.fieldValues = new Map();
-    this.userId = 1;
-    this.productId = 1;
-    this.cosmeticId = 1;
-    this.supplementId = 1;
-    this.groupId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // 24h
-    });
-
-    // Creare 4 utenti iniziali (uno per ogni ruolo)
-    this.createInitialUsers();
-    
-    // Creare prodotti di esempio
-    this.createSampleProducts();
+    const product = await this.getProduct(id);
+    return product?.lastAutosave || null;
   }
   
   // Crea prodotti di esempio per testing
@@ -180,7 +197,10 @@ export class MemStorage implements IStorage {
       usage: "Applicare mattina e sera sul viso pulito e asciutto con movimenti circolari",
       warnings: "Evitare il contatto con gli occhi",
       groupId: 1,
-      isComplete: true
+      isComplete: true,
+      isApproved: true,
+      approvedBy: 1,
+      approvedDate: new Date()
     };
     
     const createdCosmetic = await this.createProduct(cosmeticProduct);
@@ -221,7 +241,8 @@ export class MemStorage implements IStorage {
       warnings: "Non superare la dose giornaliera consigliata. Tenere fuori dalla portata dei bambini di età inferiore a 3 anni",
       conservationMethod: "Conservare in luogo fresco e asciutto, al riparo dalla luce",
       groupId: 1,
-      isComplete: true
+      isComplete: true,
+      isApproved: false
     };
     
     const createdSupplement = await this.createProduct(supplementProduct);
@@ -415,6 +436,9 @@ export class MemStorage implements IStorage {
       specialWarnings: null,
       groupId: null,
       isComplete: false,
+      isApproved: false,
+      approvedBy: null,
+      approvedDate: null,
       lastAutosave: null,
       
       // Override con i valori inseriti
@@ -448,7 +472,7 @@ export class MemStorage implements IStorage {
     return this.products.get(id);
   }
 
-  async getProducts(type?: string, groupId?: number): Promise<Product[]> {
+  async getProducts(type?: string, groupId?: number, approvedOnly?: boolean): Promise<Product[]> {
     let allProducts = Array.from(this.products.values());
     
     if (type) {
@@ -457,6 +481,11 @@ export class MemStorage implements IStorage {
     
     if (groupId !== undefined) {
       allProducts = allProducts.filter(product => product.groupId === groupId);
+    }
+    
+    // Se è richiesto di filtrare solo i prodotti approvati (per i visualizzatori)
+    if (approvedOnly) {
+      allProducts = allProducts.filter(product => product.isApproved === true);
     }
     
     return allProducts;
@@ -473,11 +502,107 @@ export class MemStorage implements IStorage {
     };
     
     this.products.set(id, updatedProduct);
+    
+    // Aggiorna automaticamente lo stato di completezza
+    await this.updateProductCompleteness(id);
+    
     return updatedProduct;
   }
 
   async deleteProduct(id: number): Promise<boolean> {
     return this.products.delete(id);
+  }
+  
+  // Metodi per gestire l'approvazione e la completezza
+  async checkProductCompleteness(id: number): Promise<boolean> {
+    const product = await this.getProduct(id);
+    if (!product) return false;
+    
+    // Verifica campi obbligatori per tutti i prodotti
+    const requiredFields = [
+      'name', 'type', 'code', 'date', 'content', 'category', 
+      'packaging', 'ingredients', 'characteristics', 'usage'
+    ];
+    
+    // Controlla se tutti i campi obbligatori sono compilati
+    const isComplete = requiredFields.every(field => 
+      product[field as keyof Product] !== null && 
+      product[field as keyof Product] !== undefined && 
+      product[field as keyof Product] !== '');
+    
+    // Verifica campi specifici per tipo di prodotto
+    let detailsComplete = false;
+    
+    if (product.type === 'cosmetic') {
+      const details = await this.getCosmeticDetailsByProductId(id);
+      if (details) {
+        const cosmeticRequiredFields = ['color', 'fragrance', 'ph'];
+        detailsComplete = cosmeticRequiredFields.every(field => 
+          details[field as keyof CosmeticDetails] !== null && 
+          details[field as keyof CosmeticDetails] !== undefined &&
+          details[field as keyof CosmeticDetails] !== '');
+      }
+    } else if (product.type === 'supplement') {
+      const details = await this.getSupplementDetailsByProductId(id);
+      if (details) {
+        const supplementRequiredFields = ['nutritionalInfo', 'indications', 'dosage'];
+        detailsComplete = supplementRequiredFields.every(field => 
+          details[field as keyof SupplementDetails] !== null && 
+          details[field as keyof SupplementDetails] !== undefined &&
+          details[field as keyof SupplementDetails] !== '');
+      }
+    }
+    
+    return isComplete && detailsComplete;
+  }
+  
+  async updateProductCompleteness(id: number): Promise<Product | undefined> {
+    const product = await this.getProduct(id);
+    if (!product) return undefined;
+    
+    const isComplete = await this.checkProductCompleteness(id);
+    
+    // Aggiorna lo stato di completezza se è cambiato
+    if (product.isComplete !== isComplete) {
+      product.isComplete = isComplete;
+      product.updatedAt = new Date();
+      this.products.set(id, product);
+    }
+    
+    return product;
+  }
+  
+  async approveProduct(productId: number, userId: number): Promise<Product | undefined> {
+    const product = await this.getProduct(productId);
+    const user = await this.getUser(userId);
+    
+    if (!product || !user) return undefined;
+    
+    // Verifica che l'utente sia un amministratore
+    if (user.role !== 'amministratore') return undefined;
+    
+    // Imposta lo stato di approvazione
+    product.isApproved = true;
+    product.approvedBy = userId;
+    product.approvedDate = new Date();
+    product.updatedAt = new Date();
+    
+    this.products.set(productId, product);
+    return product;
+  }
+  
+  async unapproveProduct(productId: number): Promise<Product | undefined> {
+    const product = await this.getProduct(productId);
+    if (!product) return undefined;
+    
+    // Rimuovi l'approvazione
+    product.isApproved = false;
+    product.approvedBy = null;
+    product.approvedDate = null;
+    product.updatedAt = new Date();
+    
+    this.products.set(productId, product);
+    return product;
   }
 
   // Cosmetic details methods
