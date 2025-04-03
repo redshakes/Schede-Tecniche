@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import React, { useState } from "react";
+import { useLocation } from "wouter";
+import { Menu, X, Home, FileText, UserCog, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { UserCog, Menu, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type SidebarProps = {
@@ -56,91 +59,6 @@ export default function Sidebar({ activeType, setActiveType, isReadOnly = false 
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 px-2">
-        <h2 className="px-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">
-          Prodotti
-        </h2>
-
-        <div className="space-y-1">
-          <Button
-            variant={activeType === "cosmetic" ? "default" : "ghost"}
-            className="w-full justify-start"
-            onClick={() => !isReadOnly && setActiveType("cosmetic")}
-            disabled={isReadOnly}
-          >
-            <i className="pi pi-palette mr-3"></i>
-            <span>Cosmetici</span>
-          </Button>
-
-          <Button
-            variant={activeType === "supplement" ? "default" : "ghost"}
-            className="w-full justify-start"
-            onClick={() => !isReadOnly && setActiveType("supplement")}
-            disabled={isReadOnly}
-          >
-            <i className="pi pi-heart mr-3"></i>
-            <span>Integratori</span>
-          </Button>
-        </div>
-
-        <h2 className="px-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider mt-6 mb-2">
-          Gestione
-        </h2>
-
-        <div className="space-y-1">
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => handleNavigate("/")}
-          >
-            <i className="pi pi-home mr-3"></i>
-            <span>Dashboard</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => handleNavigate("/products/new")}
-          >
-            <i className="pi pi-plus mr-3"></i>
-            <span>Nuova Scheda</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => handleNavigate("/products")}
-          >
-            <i className="pi pi-list mr-3"></i>
-            <span>Elenco Schede</span>
-          </Button>
-
-          {canAdministrate() && (
-            <>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavigate("/admin/users")}
-              >
-                <UserCog className="h-4 w-4 mr-3" />
-                <span>Gestione Utenti</span>
-              </Button>
-              
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavigate("/admin/groups")}
-              >
-                <i className="pi pi-users mr-3"></i>
-                <span>Gestione Gruppi</span>
-              </Button>
-            </>
-          )}
-        </div>
-      </nav>
-
-      <Separator />
-
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center">
@@ -148,11 +66,11 @@ export default function Sidebar({ activeType, setActiveType, isReadOnly = false 
               <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
             <div className="ml-3">
-              <p className="text-sm font-medium text-neutral-700">{user?.name}</p>
+              <p className="text-sm font-medium text-foreground">{user?.name}</p>
               <Button
                 variant="link"
                 size="sm"
-                className="h-auto p-0 text-xs font-medium text-neutral-500 hover:text-neutral-700"
+                className="h-auto p-0 text-xs font-medium text-muted-foreground hover:text-foreground"
                 onClick={handleLogout}
               >
                 Logout
@@ -162,6 +80,58 @@ export default function Sidebar({ activeType, setActiveType, isReadOnly = false 
           <ThemeToggle />
         </div>
       </div>
+
+      <nav className="flex-1 overflow-y-auto py-4 px-4">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          Navigazione
+        </h2>
+        <div className="space-y-1">
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={() => handleNavigate("/")}
+          >
+            <Home className="mr-2 h-4 w-4" />
+            <span>Dashboard</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={() => handleNavigate("/products")}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            <span>Schede Tecniche</span>
+          </Button>
+        </div>
+
+        {canAdministrate() && (
+          <>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-6">
+              Amministrazione
+            </h2>
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigate("/admin/users")}
+              >
+                <UserCog className="mr-2 h-4 w-4" />
+                <span>Gestione Utenti</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigate("/admin/groups")}
+              >
+                <UsersRound className="mr-2 h-4 w-4" />
+                <span>Gestione Gruppi</span>
+              </Button>
+            </div>
+          </>
+        )}
+      </nav>
     </>
   );
 

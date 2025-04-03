@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import MainLayout from "@/components/main-layout";
 
 export default function AdminUsersPage() {
   const [, setLocation] = useLocation();
@@ -375,81 +376,82 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Gestione Utenti</h1>
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        {users && users.length > 0 ? (
-          <DataTable columns={columns} data={users} searchColumn="name" />
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Nessun utente trovato</p>
-          </div>
-        )}
-      </div>
-      
-      {/* Dialog per la selezione dei gruppi */}
-      <Dialog open={isGroupDialogOpen} onOpenChange={setIsGroupDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {users?.find(u => u.id === selectedUserId)?.approved 
-                ? "Aggiorna gruppi del visualizzatore" 
-                : "Assegna gruppi al visualizzatore"}
-            </DialogTitle>
-            <DialogDescription>
-              Seleziona i gruppi di schede a cui l'utente avrà accesso.
-              Solo i visualizzatori necessitano dell'assegnazione di gruppi specifici.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <h3 className="font-medium mb-2">Gruppi disponibili:</h3>
-            {groups && groups.length > 0 ? (
-              <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-2">
-                {groups.map((group) => (
-                  <div key={group.id} className="flex items-center space-x-2 p-1 hover:bg-gray-100 rounded">
-                    <Checkbox 
-                      id={`group-${group.id}`} 
-                      checked={selectedGroups.includes(group.id.toString())}
-                      onCheckedChange={() => handleGroupChange(group.id.toString())}
-                    />
-                    <label 
-                      htmlFor={`group-${group.id}`}
-                      className="cursor-pointer flex-1 font-medium text-sm"
-                    >
-                      {group.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 italic">Nessun gruppo disponibile. Crea prima dei gruppi.</p>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsGroupDialogOpen(false)}>Annulla</Button>
+    <MainLayout title="Gestione Utenti">
+      <div className="container mx-auto py-8">
+        <div className="bg-card p-6 rounded-lg shadow-md">
+          {users && users.length > 0 ? (
+            <DataTable columns={columns} data={users} searchColumn="name" />
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Nessun utente trovato</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Dialog per la selezione dei gruppi */}
+        <Dialog open={isGroupDialogOpen} onOpenChange={setIsGroupDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {users?.find(u => u.id === selectedUserId)?.approved 
+                  ? "Aggiorna gruppi del visualizzatore" 
+                  : "Assegna gruppi al visualizzatore"}
+              </DialogTitle>
+              <DialogDescription>
+                Seleziona i gruppi di schede a cui l'utente avrà accesso.
+                Solo i visualizzatori necessitano dell'assegnazione di gruppi specifici.
+              </DialogDescription>
+            </DialogHeader>
             
-            {users?.find(u => u.id === selectedUserId)?.approved ? (
-              // Pulsante per aggiornare i gruppi di un utente approvato
-              <Button 
-                disabled={updateUserGroupsMutation.isPending} 
-                onClick={handleUpdateGroups}
-              >
-                {updateUserGroupsMutation.isPending ? "Aggiornamento..." : "Aggiorna gruppi"}
-              </Button>
-            ) : (
-              // Pulsante per approvare un nuovo utente con gruppi
-              <Button 
-                disabled={selectedGroups.length === 0 || approveWithGroupsMutation.isPending} 
-                onClick={handleApproveWithGroups}
-              >
-                {approveWithGroupsMutation.isPending ? "Approvazione..." : "Approva con gruppi selezionati"}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+            <div className="py-4">
+              <h3 className="font-medium mb-2">Gruppi disponibili:</h3>
+              {groups && groups.length > 0 ? (
+                <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-2">
+                  {groups.map((group) => (
+                    <div key={group.id} className="flex items-center space-x-2 p-1 hover:bg-gray-100 rounded">
+                      <Checkbox 
+                        id={`group-${group.id}`} 
+                        checked={selectedGroups.includes(group.id.toString())}
+                        onCheckedChange={() => handleGroupChange(group.id.toString())}
+                      />
+                      <label 
+                        htmlFor={`group-${group.id}`}
+                        className="cursor-pointer flex-1 font-medium text-sm"
+                      >
+                        {group.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 italic">Nessun gruppo disponibile. Crea prima dei gruppi.</p>
+              )}
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsGroupDialogOpen(false)}>Annulla</Button>
+              
+              {users?.find(u => u.id === selectedUserId)?.approved ? (
+                // Pulsante per aggiornare i gruppi di un utente approvato
+                <Button 
+                  disabled={updateUserGroupsMutation.isPending} 
+                  onClick={handleUpdateGroups}
+                >
+                  {updateUserGroupsMutation.isPending ? "Aggiornamento..." : "Aggiorna gruppi"}
+                </Button>
+              ) : (
+                // Pulsante per approvare un nuovo utente con gruppi
+                <Button 
+                  disabled={selectedGroups.length === 0 || approveWithGroupsMutation.isPending} 
+                  onClick={handleApproveWithGroups}
+                >
+                  {approveWithGroupsMutation.isPending ? "Approvazione..." : "Approva con gruppi selezionati"}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </MainLayout>
   );
 }

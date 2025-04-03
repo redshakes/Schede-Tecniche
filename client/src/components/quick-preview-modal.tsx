@@ -4,9 +4,10 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
-import PdfPreview from "./pdf-preview";
+import PdfPreviewImproved from "./pdf-preview-improved";
 
 type QuickPreviewModalProps = {
   product: any;
@@ -22,17 +23,22 @@ export default function QuickPreviewModal({ product, details, isOpen, onClose }:
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader className="flex justify-between items-center">
-          <DialogTitle>
-            Anteprima: {product.name}
-          </DialogTitle>
+          <div>
+            <DialogTitle>
+              Anteprima: {product.name}
+            </DialogTitle>
+            <DialogDescription>
+              Anteprima della scheda tecnica così come sarà esportata in PDF
+            </DialogDescription>
+          </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto p-4 bg-muted/30 dark:bg-muted/10 rounded-md">
-          {product && details ? (
+          {product ? (
             <div className="bg-card p-6 border shadow rounded-lg">
-              <PdfPreview product={product} details={details} />
+              <PdfPreviewImproved product={product} details={details || {}} />
             </div>
           ) : (
             <div className="flex items-center justify-center h-full">
