@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { generateCosmeticPDF, generateSupplementPDF } from "./pdf";
+import { generateCosmeticPDF, generateSupplementPDF, generateCosmeticDOCX, generateSupplementDOCX } from "./pdf";
 import { generateCosmeticMarkdown, generateSupplementMarkdown } from "./markdown";
 import { insertProductSchema, insertCosmeticDetailsSchema, insertSupplementDetailsSchema, insertGroupSchema } from "@shared/schema";
 import { ZodError } from "zod";
@@ -658,13 +658,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!details) {
           return res.status(404).json({ message: "Dettagli prodotto non trovati" });
         }
-        docxBuffer = await generateCosmeticPDF(product, details);
+        docxBuffer = await generateCosmeticDOCX(product, details);
       } else if (product.type === "supplement") {
         const details = await storage.getSupplementDetailsByProductId(id);
         if (!details) {
           return res.status(404).json({ message: "Dettagli prodotto non trovati" });
         }
-        docxBuffer = await generateSupplementPDF(product, details);
+        docxBuffer = await generateSupplementDOCX(product, details);
       } else {
         return res.status(400).json({ message: "Tipo di prodotto non supportato" });
       }

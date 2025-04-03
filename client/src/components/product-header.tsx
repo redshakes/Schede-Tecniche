@@ -2,7 +2,8 @@ import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { SaveIcon, FileDown, FileText } from "lucide-react";
+import { SaveIcon, FileDown } from "lucide-react";
+import { useLocation } from "wouter";
 
 type ProductHeaderProps = {
   title: string;
@@ -14,6 +15,7 @@ type ProductHeaderProps = {
 
 export default function ProductHeader({ title, productId, onSave, isSaving, isReadOnly = false }: ProductHeaderProps) {
   const { toast } = useToast();
+  const [_, navigate] = useLocation();
 
   const generatePdf = useCallback(async () => {
     if (!productId) {
@@ -35,7 +37,7 @@ export default function ProductHeader({ title, productId, onSave, isSaving, isRe
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `scheda-tecnica.html`;
+      a.download = `scheda-tecnica.docx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -54,44 +56,11 @@ export default function ProductHeader({ title, productId, onSave, isSaving, isRe
     }
   }, [productId, toast]);
 
-  const exportMd = useCallback(async () => {
-    if (!productId) {
-      toast({
-        title: "Errore",
-        description: "Salva il prodotto prima di esportare il Markdown",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const res = await apiRequest("POST", "/api/export-md", { id: productId });
-      
-      // Create a blob from the response
-      const blob = await res.blob();
-      
-      // Create a temporary link and trigger download
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `scheda-tecnica.md`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Markdown esportato",
-        description: "Il file Markdown è stato generato e scaricato con successo",
-      });
-    } catch (error) {
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante l'esportazione del Markdown",
-        variant: "destructive",
-      });
-    }
-  }, [productId, toast]);
+  // Gestione salvataggio con messaggio di conferma e redirect
+  const handleSave = () => {
+    onSave();
+    // Il redirect verrà gestito nella mutation di salvataggio
+  };
 
   return (
     <header className="bg-white shadow">
@@ -101,7 +70,7 @@ export default function ProductHeader({ title, productId, onSave, isSaving, isRe
           
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             {!isReadOnly && (
-              <Button className="w-full sm:w-auto" onClick={onSave} disabled={isSaving}>
+              <Button className="w-full sm:w-auto" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? (
                   <>
                     <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em]"></span>

@@ -217,9 +217,10 @@ export default function ProductForm() {
     onSuccess: (data) => {
       toast({
         title: "Prodotto salvato",
-        description: "La scheda tecnica è stata creata con successo",
+        description: "La Scheda Tecnica è stata salvata con successo",
       });
-      navigate(`/products/${data.id}`);
+      // Reindirizza alla dashboard dopo il salvataggio
+      navigate("/");
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
     },
     onError: (error: Error) => {
@@ -240,8 +241,10 @@ export default function ProductForm() {
     onSuccess: () => {
       toast({
         title: "Prodotto aggiornato",
-        description: "La scheda tecnica è stata aggiornata con successo",
+        description: "La Scheda Tecnica è stata salvata con successo",
       });
+      // Reindirizza alla dashboard dopo l'aggiornamento
+      navigate("/");
       queryClient.invalidateQueries({ queryKey: ["/api/products", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
     },

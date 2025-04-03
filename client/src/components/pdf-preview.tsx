@@ -79,6 +79,9 @@ export default function PdfPreview({ product, details }: PdfPreviewProps) {
           maxWidth: '800px', 
           minHeight: '842px', 
           backgroundColor: 'white',
+          backgroundImage: 'url("/assets/carta-intestata.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           transition: 'width 0.2s ease'
         }}
       >

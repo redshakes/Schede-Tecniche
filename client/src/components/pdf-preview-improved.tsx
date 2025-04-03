@@ -103,6 +103,9 @@ export default function PdfPreviewImproved({ product, details }: PdfPreviewImpro
           width: `${Math.min(zoom, 100)}%`, 
           maxWidth: '800px',
           backgroundColor: 'white',
+          backgroundImage: 'url("/assets/carta-intestata.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           transition: 'width 0.2s ease',
           fontFamily: 'Arial, sans-serif'
         }}
