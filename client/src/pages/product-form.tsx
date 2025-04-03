@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Sidebar from "@/components/sidebar";
 import ProductHeader from "@/components/product-header";
 import CosmeticForm from "@/components/cosmetic-form";
 import SupplementForm from "@/components/supplement-form";
@@ -292,313 +291,309 @@ export default function ProductForm() {
   }
   
   return (
-    <MainLayout title={title}>
-      <div className="flex">
-        <Sidebar activeType={activeType} setActiveType={handleTypeChange} isReadOnly={isReadOnly} />
+    <MainLayout title={title} activeType={activeType} setActiveType={handleTypeChange} isReadOnly={isReadOnly}>
+      <div className="flex flex-col">
+        <ProductHeader 
+          title={formTitle} 
+          productId={id ? parseInt(id) : undefined} 
+          onSave={form.handleSubmit(onSubmit)} 
+          isSaving={isSaving}
+          isReadOnly={isReadOnly}
+        />
         
-        <div className="flex-1 overflow-y-auto">
-          <ProductHeader 
-            title={formTitle} 
-            productId={id ? parseInt(id) : undefined} 
-            onSave={form.handleSubmit(onSubmit)} 
-            isSaving={isSaving}
-            isReadOnly={isReadOnly}
-          />
-        
-          <div className="container mx-auto py-6 px-4 lg:px-8">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
-                  {/* Form Panel */}
-                  <div className="lg:w-1/2 space-y-6">
-                    {/* Basic Information */}
-                    <Card>
-                      <CardContent className="pt-6">
-                        <h2 className="text-lg font-medium text-neutral-800 mb-4">{formTitle}</h2>
+        <div className="container mx-auto py-6 px-4 lg:px-8">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+                {/* Form Panel */}
+                <div className="lg:w-1/2 space-y-6">
+                  {/* Basic Information */}
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h2 className="text-lg font-medium text-neutral-800 mb-4">{formTitle}</h2>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">Nome Prodotto</label>
+                          <Input
+                            {...form.register("product.name")}
+                            placeholder="Inserisci nome prodotto"
+                            readOnly={isReadOnly}
+                          />
+                          {form.formState.errors.product?.name && (
+                            <p className="text-sm text-red-500 mt-1">{form.formState.errors.product.name.message}</p>
+                          )}
+                        </div>
                         
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">Nome Prodotto</label>
-                            <Input
-                              {...form.register("product.name")}
-                              placeholder="Inserisci nome prodotto"
-                              readOnly={isReadOnly}
-                            />
-                            {form.formState.errors.product?.name && (
-                              <p className="text-sm text-red-500 mt-1">{form.formState.errors.product.name.message}</p>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">Sottotitolo</label>
+                          <Input
+                            {...withReadOnly(form.register("product.subtitle"))}
+                            placeholder="Inserisci sottotitolo"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">Gruppo</label>
+                          <Controller
+                            name="product.groupId"
+                            control={form.control}
+                            render={({ field }) => (
+                              <div>
+                                {isReadOnly ? (
+                                  <Input 
+                                    value={groups.find((g: any) => g.id === field.value)?.name || "Nessun gruppo"} 
+                                    readOnly 
+                                    className="bg-gray-100"
+                                  />
+                                ) : (
+                                  <Select 
+                                    onValueChange={(value) => field.onChange(value !== "null" ? parseInt(value) : null)}
+                                    value={field.value ? field.value.toString() : "null"}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Seleziona gruppo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="null">Nessun gruppo</SelectItem>
+                                      {groupsOptions}
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              </div>
                             )}
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">Sottotitolo</label>
-                            <Input
-                              {...withReadOnly(form.register("product.subtitle"))}
-                              placeholder="Inserisci sottotitolo"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">Gruppo</label>
-                            <Controller
-                              name="product.groupId"
-                              control={form.control}
-                              render={({ field }) => (
-                                <div>
-                                  {isReadOnly ? (
-                                    <Input 
-                                      value={groups.find((g: any) => g.id === field.value)?.name || "Nessun gruppo"} 
-                                      readOnly 
-                                      className="bg-gray-100"
-                                    />
-                                  ) : (
-                                    <Select 
-                                      onValueChange={(value) => field.onChange(value !== "null" ? parseInt(value) : null)}
-                                      value={field.value ? field.value.toString() : "null"}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Seleziona gruppo" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="null">Nessun gruppo</SelectItem>
-                                        {groupsOptions}
-                                      </SelectContent>
-                                    </Select>
-                                  )}
-                                </div>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-neutral-700 mb-1">Codice Notifica Farmadati</label>
-                              <Input
-                                {...withReadOnly(form.register("product.code"))}
-                                placeholder="000000000"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-neutral-700 mb-1">Data</label>
-                              <Input
-                                type="date"
-                                {...withReadOnly(form.register("product.date"))}
-                              />
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-neutral-700 mb-1">Contenuto (ml)</label>
-                              <Input
-                                {...form.register("product.content")}
-                                placeholder="100"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-neutral-700 mb-1">Macrocategoria</label>
-                              <Input
-                                {...form.register("product.category")}
-                                placeholder="Inserisci macrocategoria"
-                              />
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-neutral-700 mb-1">Packaging Primario</label>
-                              <Input
-                                {...form.register("product.packaging")}
-                                placeholder="Inserisci packaging"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-neutral-700 mb-1">Accessorio</label>
-                              <Input
-                                {...form.register("product.accessory")}
-                                placeholder="Inserisci accessorio"
-                              />
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-neutral-700 mb-1">Lotto</label>
-                              <Input
-                                {...form.register("product.batch")}
-                                placeholder="Inserisci lotto"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                                {activeType === "cosmetic" ? "CPNP" : "Aut. Min."}
-                              </label>
-                              <Input
-                                {...form.register(activeType === "cosmetic" ? "product.cpnp" : "product.authMinistry")}
-                                placeholder={`Inserisci ${activeType === "cosmetic" ? "CPNP" : "Aut. Min."}`}
-                              />
-                            </div>
-                          </div>
+                          />
                         </div>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Dynamic form based on type */}
-                    {activeType === "cosmetic" ? (
-                      <CosmeticForm control={form.control} isReadOnly={isReadOnly} />
-                    ) : (
-                      <SupplementForm control={form.control} isReadOnly={isReadOnly} />
-                    )}
-                    
-                    {/* Common fields for both types */}
-                    <Card className="mb-6">
-                      <CardContent className="pt-6">
-                        <h2 className="text-lg font-medium text-neutral-800 mb-4">Composizione - Ingredienti (INCI)</h2>
                         
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <Textarea
-                              {...form.register("product.ingredients")}
-                              className="w-full px-3 py-2 h-40"
-                              placeholder="Inserisci la composizione..."
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Codice Notifica Farmadati</label>
+                            <Input
+                              {...withReadOnly(form.register("product.code"))}
+                              placeholder="000000000"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Data</label>
+                            <Input
+                              type="date"
+                              {...withReadOnly(form.register("product.date"))}
                             />
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="mb-6">
-                      <CardContent className="pt-6">
-                        <h2 className="text-lg font-medium text-neutral-800 mb-4">Test - Certificazioni - Studi Scientifici</h2>
                         
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">TEST</label>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Contenuto (ml)</label>
                             <Input
-                              {...form.register("product.tests")}
-                              placeholder="Inserisci test"
+                              {...form.register("product.content")}
+                              placeholder="100"
                             />
                           </div>
                           
                           <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">CERTIFICAZIONI</label>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Macrocategoria</label>
                             <Input
-                              {...form.register("product.certifications")}
-                              placeholder="Inserisci certificazioni"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">TRIAL CLINICI</label>
-                            <Input
-                              {...form.register("product.clinicalTrials")}
-                              placeholder="Inserisci trial clinici"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">CLAIM/INDICAZIONI SALUTISTICHE</label>
-                            <Input
-                              {...form.register("product.claims")}
-                              placeholder="Inserisci claim/indicazioni"
+                              {...form.register("product.category")}
+                              placeholder="Inserisci macrocategoria"
                             />
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="mb-6">
-                      <CardContent className="pt-6">
-                        <h2 className="text-lg font-medium text-neutral-800 mb-4">Principi Attivi di Origine Vegetale</h2>
                         
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">Attivi Naturali Selezionati</label>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Packaging Primario</label>
                             <Input
-                              {...form.register("product.naturalActives")}
-                              placeholder="Inserisci attivi naturali"
+                              {...form.register("product.packaging")}
+                              placeholder="Inserisci packaging"
                             />
                           </div>
                           
                           <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">Attivi Funzionali in formula</label>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Accessorio</label>
                             <Input
-                              {...form.register("product.functionalActives")}
-                              placeholder="Inserisci attivi funzionali"
+                              {...form.register("product.accessory")}
+                              placeholder="Inserisci accessorio"
                             />
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="mb-6">
-                      <CardContent className="pt-6">
-                        <h2 className="text-lg font-medium text-neutral-800 mb-4">Avvertenze</h2>
                         
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <Textarea
-                              {...form.register("product.warnings")}
-                              className="w-full px-3 py-2 h-32"
-                              placeholder="Inserisci le avvertenze..."
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Lotto</label>
+                            <Input
+                              {...form.register("product.batch")}
+                              placeholder="Inserisci lotto"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">
+                              {activeType === "cosmetic" ? "CPNP" : "Aut. Min."}
+                            </label>
+                            <Input
+                              {...form.register(activeType === "cosmetic" ? "product.cpnp" : "product.authMinistry")}
+                              placeholder={`Inserisci ${activeType === "cosmetic" ? "CPNP" : "Aut. Min."}`}
                             />
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Additional fields for supplements */}
-                    {activeType === "supplement" && (
-                      <>
-                        <Card className="mb-6">
-                          <CardContent className="pt-6">
-                            <h2 className="text-lg font-medium text-neutral-800 mb-4">Modalità di Conservazione del Prodotto</h2>
-                            
-                            <div className="space-y-4">
-                              <div>
-                                <Textarea
-                                  {...form.register("product.conservationMethod")}
-                                  className="w-full px-3 py-2 h-32"
-                                  placeholder="Inserisci le modalità di conservazione..."
-                                />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card className="mb-6">
-                          <CardContent className="pt-6">
-                            <h2 className="text-lg font-medium text-neutral-800 mb-4">Avvertenze Speciali</h2>
-                            
-                            <div className="space-y-4">
-                              <div>
-                                <Textarea
-                                  {...form.register("product.specialWarnings")}
-                                  className="w-full px-3 py-2 h-32"
-                                  placeholder="Inserisci le avvertenze speciali..."
-                                />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                   
-                  {/* Preview Panel */}
-                  <div className="lg:w-1/2 sticky top-0">
-                    <PdfPreview 
-                      product={form.watch("product")}
-                      details={form.watch("details")}
-                    />
-                  </div>
+                  {/* Dynamic form based on type */}
+                  {activeType === "cosmetic" ? (
+                    <CosmeticForm control={form.control} isReadOnly={isReadOnly} />
+                  ) : (
+                    <SupplementForm control={form.control} isReadOnly={isReadOnly} />
+                  )}
+                  
+                  {/* Common fields for both types */}
+                  <Card className="mb-6">
+                    <CardContent className="pt-6">
+                      <h2 className="text-lg font-medium text-neutral-800 mb-4">Composizione - Ingredienti (INCI)</h2>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Textarea
+                            {...form.register("product.ingredients")}
+                            className="w-full px-3 py-2 h-40"
+                            placeholder="Inserisci la composizione..."
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="mb-6">
+                    <CardContent className="pt-6">
+                      <h2 className="text-lg font-medium text-neutral-800 mb-4">Test - Certificazioni - Studi Scientifici</h2>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">TEST</label>
+                          <Input
+                            {...form.register("product.tests")}
+                            placeholder="Inserisci test"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">CERTIFICAZIONI</label>
+                          <Input
+                            {...form.register("product.certifications")}
+                            placeholder="Inserisci certificazioni"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">TRIAL CLINICI</label>
+                          <Input
+                            {...form.register("product.clinicalTrials")}
+                            placeholder="Inserisci trial clinici"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">CLAIM/INDICAZIONI SALUTISTICHE</label>
+                          <Input
+                            {...form.register("product.claims")}
+                            placeholder="Inserisci claim/indicazioni"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="mb-6">
+                    <CardContent className="pt-6">
+                      <h2 className="text-lg font-medium text-neutral-800 mb-4">Principi Attivi di Origine Vegetale</h2>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">Attivi Naturali Selezionati</label>
+                          <Input
+                            {...form.register("product.naturalActives")}
+                            placeholder="Inserisci attivi naturali"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-1">Attivi Funzionali in formula</label>
+                          <Input
+                            {...form.register("product.functionalActives")}
+                            placeholder="Inserisci attivi funzionali"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="mb-6">
+                    <CardContent className="pt-6">
+                      <h2 className="text-lg font-medium text-neutral-800 mb-4">Avvertenze</h2>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Textarea
+                            {...form.register("product.warnings")}
+                            className="w-full px-3 py-2 h-32"
+                            placeholder="Inserisci le avvertenze..."
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Additional fields for supplements */}
+                  {activeType === "supplement" && (
+                    <>
+                      <Card className="mb-6">
+                        <CardContent className="pt-6">
+                          <h2 className="text-lg font-medium text-neutral-800 mb-4">Modalità di Conservazione del Prodotto</h2>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <Textarea
+                                {...form.register("product.conservationMethod")}
+                                className="w-full px-3 py-2 h-32"
+                                placeholder="Inserisci le modalità di conservazione..."
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="mb-6">
+                        <CardContent className="pt-6">
+                          <h2 className="text-lg font-medium text-neutral-800 mb-4">Avvertenze Speciali</h2>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <Textarea
+                                {...form.register("product.specialWarnings")}
+                                className="w-full px-3 py-2 h-32"
+                                placeholder="Inserisci le avvertenze speciali..."
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
+                  )}
                 </div>
-              </form>
-            </Form>
-          </div>
+                
+                {/* Preview Panel */}
+                <div className="lg:w-1/2 sticky top-0">
+                  <PdfPreview 
+                    product={form.watch("product")}
+                    details={form.watch("details")}
+                  />
+                </div>
+              </div>
+            </form>
+          </Form>
         </div>
       </div>
     </MainLayout>
