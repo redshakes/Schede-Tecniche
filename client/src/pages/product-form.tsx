@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,7 +78,18 @@ export default function ProductForm() {
   const { id } = useParams<{ id: string }>();
   const [_, navigate] = useLocation();
   const { toast } = useToast();
+  const { canEdit } = useAuth();
   const [activeType, setActiveType] = useState<string>("cosmetic");
+  const isReadOnly = !canEdit();
+  
+  // Funzione di utilità per applicare la proprietà readOnly agli input
+  const withReadOnly = (props: any) => {
+    return {
+      ...props,
+      readOnly: isReadOnly,
+      className: `${props.className || ''} ${isReadOnly ? 'bg-gray-100' : ''}`
+    };
+  };
   
   // Form setup
   const form = useForm<FormValues>({
@@ -184,6 +196,18 @@ export default function ProductForm() {
     }
   }, [productData, form]);
   
+  // Applicare lo stile di sola lettura a tutti gli input
+  useEffect(() => {
+    if (isReadOnly) {
+      // Applicare a tutti gli input e textarea
+      const inputs = document.querySelectorAll('input, textarea, select');
+      inputs.forEach(input => {
+        input.setAttribute('readOnly', 'true');
+        input.classList.add('bg-gray-100');
+      });
+    }
+  }, [isReadOnly]);
+  
   // Save product mutation
   const createMutation = useMutation({
     mutationFn: async (data: FormValues) => {
@@ -268,7 +292,7 @@ export default function ProductForm() {
   
   return (
     <div className="flex h-screen bg-neutral-50">
-      <Sidebar activeType={activeType} setActiveType={handleTypeChange} />
+      <Sidebar activeType={activeType} setActiveType={handleTypeChange} isReadOnly={isReadOnly} />
       
       <main className="flex-1 overflow-y-auto">
         <ProductHeader 
@@ -276,6 +300,7 @@ export default function ProductForm() {
           productId={id ? parseInt(id) : undefined} 
           onSave={form.handleSubmit(onSubmit)} 
           isSaving={isSaving}
+          isReadOnly={isReadOnly}
         />
         
         <div className="container mx-auto py-6 px-4 lg:px-8">
@@ -295,6 +320,7 @@ export default function ProductForm() {
                           <Input
                             {...form.register("product.name")}
                             placeholder="Inserisci nome prodotto"
+                            readOnly={isReadOnly}
                           />
                           {form.formState.errors.product?.name && (
                             <p className="text-sm text-red-500 mt-1">{form.formState.errors.product.name.message}</p>
@@ -304,7 +330,7 @@ export default function ProductForm() {
                         <div>
                           <label className="block text-sm font-medium text-neutral-700 mb-1">Sottotitolo</label>
                           <Input
-                            {...form.register("product.subtitle")}
+                            {...withReadOnly(form.register("product.subtitle"))}
                             placeholder="Inserisci sottotitolo"
                           />
                         </div>
@@ -316,18 +342,26 @@ export default function ProductForm() {
                             control={form.control}
                             render={({ field }) => (
                               <div>
-                                <Select 
-                                  onValueChange={(value) => field.onChange(value !== "null" ? parseInt(value) : null)}
-                                  value={field.value ? field.value.toString() : "null"}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Seleziona gruppo" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="null">Nessun gruppo</SelectItem>
-                                    {groupsOptions}
-                                  </SelectContent>
-                                </Select>
+                                {isReadOnly ? (
+                                  <Input 
+                                    value={groups.find((g: any) => g.id === field.value)?.name || "Nessun gruppo"} 
+                                    readOnly 
+                                    className="bg-gray-100"
+                                  />
+                                ) : (
+                                  <Select 
+                                    onValueChange={(value) => field.onChange(value !== "null" ? parseInt(value) : null)}
+                                    value={field.value ? field.value.toString() : "null"}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Seleziona gruppo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="null">Nessun gruppo</SelectItem>
+                                      {groupsOptions}
+                                    </SelectContent>
+                                  </Select>
+                                )}
                               </div>
                             )}
                           />
@@ -337,7 +371,7 @@ export default function ProductForm() {
                           <div>
                             <label className="block text-sm font-medium text-neutral-700 mb-1">Codice Notifica Farmadati</label>
                             <Input
-                              {...form.register("product.code")}
+                              {...withReadOnly(form.register("product.code"))}
                               placeholder="000000000"
                             />
                           </div>
@@ -346,7 +380,7 @@ export default function ProductForm() {
                             <label className="block text-sm font-medium text-neutral-700 mb-1">Data</label>
                             <Input
                               type="date"
-                              {...form.register("product.date")}
+                              {...withReadOnly(form.register("product.date"))}
                             />
                           </div>
                         </div>
@@ -412,9 +446,9 @@ export default function ProductForm() {
                   
                   {/* Dynamic form based on type */}
                   {activeType === "cosmetic" ? (
-                    <CosmeticForm control={form.control} />
+                    <CosmeticForm control={form.control} isReadOnly={isReadOnly} />
                   ) : (
-                    <SupplementForm control={form.control} />
+                    <SupplementForm control={form.control} isReadOnly={isReadOnly} />
                   )}
                   
                   {/* Common fields for both types */}

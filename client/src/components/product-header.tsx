@@ -9,9 +9,10 @@ type ProductHeaderProps = {
   productId?: number;
   onSave: () => void;
   isSaving: boolean;
+  isReadOnly?: boolean;
 };
 
-export default function ProductHeader({ title, productId, onSave, isSaving }: ProductHeaderProps) {
+export default function ProductHeader({ title, productId, onSave, isSaving, isReadOnly = false }: ProductHeaderProps) {
   const { toast } = useToast();
 
   const generatePdf = useCallback(async () => {
@@ -99,27 +100,24 @@ export default function ProductHeader({ title, productId, onSave, isSaving }: Pr
           <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">{title}</h1>
           
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-            <Button className="w-full sm:w-auto" onClick={onSave} disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em]"></span>
-                  Salvataggio...
-                </>
-              ) : (
-                <>
-                  <SaveIcon className="mr-2 h-4 w-4" />
-                  Salva
-                </>
-              )}
-            </Button>
+            {!isReadOnly && (
+              <Button className="w-full sm:w-auto" onClick={onSave} disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em]"></span>
+                    Salvataggio...
+                  </>
+                ) : (
+                  <>
+                    <SaveIcon className="mr-2 h-4 w-4" />
+                    Salva
+                  </>
+                )}
+              </Button>
+            )}
             
             <Button className="flex-1 sm:flex-initial" variant="outline" onClick={generatePdf} disabled={!productId}>
               <FileDown className="mr-2 h-4 w-4" />
-              <span className="whitespace-nowrap">Genera PDF</span>
-            </Button>
-            
-            <Button className="flex-1 sm:flex-initial" variant="outline" onClick={exportMd} disabled={!productId}>
-              <FileText className="mr-2 h-4 w-4" />
               <span className="whitespace-nowrap">Esporta PDF</span>
             </Button>
           </div>

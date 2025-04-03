@@ -3,14 +3,39 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect } from "react";
 
 type CosmeticFormProps = {
   control: Control<any>;
+  isReadOnly?: boolean;
 };
 
-export default function CosmeticForm({ control }: CosmeticFormProps) {
+export default function CosmeticForm({ control, isReadOnly = false }: CosmeticFormProps) {
+  // Funzione di utilità per applicare la proprietà readOnly agli input
+  const withReadOnly = (props: any) => {
+    return {
+      ...props,
+      readOnly: isReadOnly,
+      className: `${props.className || ''} ${isReadOnly ? 'bg-gray-100' : ''}`
+    };
+  };
+  
+  // Applicare readOnly a tutti gli input del componente
+  useEffect(() => {
+    if (isReadOnly) {
+      // Seleziona tutti gli input e textarea nel componente
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('.cosmetic-form input, .cosmetic-form textarea');
+        inputs.forEach(input => {
+          input.setAttribute('readOnly', 'true');
+          input.classList.add('bg-gray-100');
+        });
+      }, 100);
+    }
+  }, [isReadOnly]);
+  
   return (
-    <>
+    <div className="cosmetic-form">
       <Card className="mb-6">
         <CardContent className="pt-6">
           <h2 className="text-lg font-medium text-neutral-800 mb-4">Analisi Organolettica</h2>
@@ -25,7 +50,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Inserisci stato/colore"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -42,7 +67,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Inserisci profumazione"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -59,7 +84,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Inserisci percezione sensoriale"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -76,7 +101,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Inserisci assorbibilità"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -102,7 +127,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                     <FormControl>
                       <Input
                         placeholder="Inserisci pH"
-                        {...field}
+                        {...withReadOnly(field)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -119,7 +144,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                     <FormControl>
                       <Input
                         placeholder="Inserisci viscosità"
-                        {...field}
+                        {...withReadOnly(field)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -137,7 +162,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Inserisci CBT"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -154,7 +179,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Inserisci lieviti e muffe"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -171,7 +196,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Inserisci escherichia coli"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -188,7 +213,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Inserisci pseudomonas auriginosa"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -213,7 +238,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                     <Textarea
                       placeholder="Inserisci le caratteristiche principali..."
                       className="min-h-[120px]"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -238,7 +263,7 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
                     <Textarea
                       placeholder="Inserisci il modo d'uso..."
                       className="min-h-[120px]"
-                      {...field}
+                      {...withReadOnly(field)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -248,6 +273,6 @@ export default function CosmeticForm({ control }: CosmeticFormProps) {
           </div>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

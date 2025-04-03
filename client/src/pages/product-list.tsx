@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import Sidebar from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ export default function ProductList() {
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
   const [_, navigate] = useLocation();
   const { toast } = useToast();
+  const { canEdit, canAdministrate } = useAuth();
 
   // Get products with optional type filter
   const { data: products = [], isLoading, refetch } = useQuery({
@@ -134,10 +136,12 @@ export default function ProductList() {
           <div className="mx-auto px-6 py-4 flex justify-between items-center">
             <h1 className="text-2xl font-bold text-neutral-800">Elenco Schede Tecniche</h1>
             
-            <Button onClick={() => navigate("/products/new")}>
-              <i className="pi pi-plus mr-2"></i>
-              Nuova Scheda
-            </Button>
+            {canEdit() && (
+              <Button onClick={() => navigate("/products/new")}>
+                <i className="pi pi-plus mr-2"></i>
+                Nuova Scheda
+              </Button>
+            )}
           </div>
         </header>
         
@@ -223,46 +227,72 @@ export default function ProductList() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <div className="flex justify-end space-x-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => navigate(`/products/${product.id}`)}
-                                  title="Modifica"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => downloadPdf(product.id)}
-                                  title="Scarica PDF"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => navigate(`/products/${product.id}`)}>
-                                      <Eye className="mr-2 h-4 w-4" />
-                                      <span>Visualizza</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => downloadPdf(product.id)}>
-                                      <Download className="mr-2 h-4 w-4" />
-                                      <span>Esporta PDF</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      className="text-red-600" 
-                                      onClick={() => setProductToDelete(product.id)}
+                                {canEdit() ? (
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => navigate(`/products/${product.id}`)}
+                                      title="Modifica"
                                     >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      <span>Elimina</span>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => downloadPdf(product.id)}
+                                      title="Esporta PDF"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => navigate(`/products/${product.id}`)}>
+                                          <Eye className="mr-2 h-4 w-4" />
+                                          <span>Visualizza</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => downloadPdf(product.id)}>
+                                          <Download className="mr-2 h-4 w-4" />
+                                          <span>Esporta PDF</span>
+                                        </DropdownMenuItem>
+                                        {canAdministrate() && (
+                                          <DropdownMenuItem 
+                                            className="text-red-600" 
+                                            onClick={() => setProductToDelete(product.id)}
+                                          >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            <span>Elimina</span>
+                                          </DropdownMenuItem>
+                                        )}
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </>
+                                ) : (
+                                  // Opzioni solo per visualizzatori
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => navigate(`/products/${product.id}`)}
+                                      title="Visualizza"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => downloadPdf(product.id)}
+                                      title="Esporta PDF"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
                               </div>
                             </td>
                           </tr>

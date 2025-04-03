@@ -11,9 +11,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 type SidebarProps = {
   activeType: string;
   setActiveType: (type: string) => void;
+  isReadOnly?: boolean;
 };
 
-export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
+export default function Sidebar({ activeType, setActiveType, isReadOnly = false }: SidebarProps) {
   const [location, navigate] = useLocation();
   const { user, logoutMutation, canAdministrate } = useAuth();
   const isMobile = useIsMobile();
@@ -63,7 +64,8 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
           <Button
             variant={activeType === "cosmetic" ? "default" : "ghost"}
             className="w-full justify-start"
-            onClick={() => setActiveType("cosmetic")}
+            onClick={() => !isReadOnly && setActiveType("cosmetic")}
+            disabled={isReadOnly}
           >
             <i className="pi pi-palette mr-3"></i>
             <span>Cosmetici</span>
@@ -72,7 +74,8 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
           <Button
             variant={activeType === "supplement" ? "default" : "ghost"}
             className="w-full justify-start"
-            onClick={() => setActiveType("supplement")}
+            onClick={() => !isReadOnly && setActiveType("supplement")}
+            disabled={isReadOnly}
           >
             <i className="pi pi-heart mr-3"></i>
             <span>Integratori</span>
