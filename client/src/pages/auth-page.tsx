@@ -23,6 +23,7 @@ const registerSchema = z.object({
   password: z.string().min(6, "La password deve contenere almeno 6 caratteri"),
   email: z.string().email("Email non valida"),
   name: z.string().min(1, "Nome è obbligatorio"),
+  company: z.string().optional(),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -56,6 +57,7 @@ export default function AuthPage() {
       password: "",
       email: "",
       name: "",
+      company: "",
     },
   });
 
@@ -255,6 +257,22 @@ export default function AuthPage() {
                       )}
                     />
                     
+                    <FormField
+                      control={registerForm.control}
+                      name="company"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Azienda</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Nome dell'azienda"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
 
                     <div className="border-l-4 border-amber-500 bg-amber-50 p-3 mb-4">

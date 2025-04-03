@@ -150,6 +150,84 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24h
     });
+
+    // Creare 4 utenti iniziali (uno per ogni ruolo)
+    this.createInitialUsers();
+  }
+
+  private async createInitialUsers() {
+    // Password comuni per tutti gli account: "admin"
+    // La password è già hashata nel formato corretto per comparePasswords
+    const commonPassword = "6d7220ea1133a7c7818422aab9e7dd0e4c8aaf7464d9ab183e2786d02804d27c96e86307a0e4ae58ed5fa3d204658288eeca9c719ff83c3e63f3aa5f83146818.e61e913d9b01a32c13b0a458ea5d1b68";
+    
+    // Amministratore
+    const admin = {
+      id: this.userId++,
+      username: "admin",
+      password: commonPassword, // password: admin
+      email: "admin@example.com",
+      name: "Amministratore",
+      company: "LFA",
+      role: "amministratore",
+      approved: true,
+      allowedGroups: [],
+      createdAt: new Date()
+    };
+    this.users.set(admin.id, admin);
+
+    // Compilatore
+    const compiler = {
+      id: this.userId++,
+      username: "compilatore",
+      password: commonPassword, // password: admin
+      email: "compilatore@example.com",
+      name: "Compilatore LFA",
+      company: "LFA",
+      role: "compilatore",
+      approved: true,
+      allowedGroups: [],
+      createdAt: new Date()
+    };
+    this.users.set(compiler.id, compiler);
+
+    // Visualizzatore
+    const viewer = {
+      id: this.userId++,
+      username: "visualizzatore",
+      password: commonPassword, // password: admin
+      email: "visualizzatore@example.com",
+      name: "Visualizzatore LFA",
+      company: "LFA",
+      role: "visualizzatore",
+      approved: true,
+      allowedGroups: [],
+      createdAt: new Date()
+    };
+    this.users.set(viewer.id, viewer);
+
+    // Guest
+    const guest = {
+      id: this.userId++,
+      username: "guest",
+      password: commonPassword, // password: admin
+      email: "guest@example.com",
+      name: "Guest LFA",
+      company: "LFA",
+      role: "guest",
+      approved: false,
+      allowedGroups: [],
+      createdAt: new Date()
+    };
+    this.users.set(guest.id, guest);
+    
+    // Creiamo anche un gruppo di default
+    const defaultGroup = {
+      id: this.groupId++,
+      name: "Gruppo Default",
+      description: "Gruppo predefinito per tutte le schede tecniche",
+      createdAt: new Date()
+    };
+    this.groups.set(defaultGroup.id, defaultGroup);
   }
 
   // User methods
@@ -169,8 +247,12 @@ export class MemStorage implements IStorage {
     
     // Assicuriamoci che i campi obbligatori siano impostati
     const user: User = { 
-      ...insertUser, 
       id, 
+      username: insertUser.username,
+      password: insertUser.password,
+      email: insertUser.email,
+      name: insertUser.name,
+      company: insertUser.company || null,
       createdAt,
       role: insertUser.role || "visualizzatore",
       approved: insertUser.approved !== undefined ? insertUser.approved : false,
@@ -189,9 +271,17 @@ export class MemStorage implements IStorage {
     const existingUser = this.users.get(id);
     if (!existingUser) return undefined;
     
+    // Gestiamo esplicitamente il campo company per evitare problemi di tipo
     const updatedUser: User = {
       ...existingUser,
-      ...userUpdate
+      username: userUpdate.username !== undefined ? userUpdate.username : existingUser.username,
+      password: userUpdate.password !== undefined ? userUpdate.password : existingUser.password,
+      email: userUpdate.email !== undefined ? userUpdate.email : existingUser.email,
+      name: userUpdate.name !== undefined ? userUpdate.name : existingUser.name,
+      company: userUpdate.company !== undefined ? userUpdate.company : existingUser.company,
+      role: userUpdate.role !== undefined ? userUpdate.role : existingUser.role,
+      approved: userUpdate.approved !== undefined ? userUpdate.approved : existingUser.approved,
+      allowedGroups: userUpdate.allowedGroups !== undefined ? userUpdate.allowedGroups : existingUser.allowedGroups
     };
     
     this.users.set(id, updatedUser);
