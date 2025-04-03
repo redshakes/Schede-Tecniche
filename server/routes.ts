@@ -148,6 +148,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Admin Routes
+  app.get("/api/admin/users", isAuthenticated, async (req, res, next) => {
+    try {
+      // Check if the user is an administrator
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Accesso non autorizzato" });
+      }
+      
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/admin/users/:id/approve", isAuthenticated, async (req, res, next) => {
+    try {
+      // Check if the user is an administrator
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Accesso non autorizzato" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID non valido" });
+      }
+      
+      const updatedUser = await storage.updateUser(id, { approved: true });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/admin/users/:id/role", isAuthenticated, async (req, res, next) => {
+    try {
+      // Check if the user is an administrator
+      if (req.user?.role !== "amministratore") {
+        return res.status(403).json({ message: "Accesso non autorizzato" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID non valido" });
+      }
+      
+      const { role } = req.body;
+      if (!role || !["amministratore", "compilatore", "visualizzatore"].includes(role)) {
+        return res.status(400).json({ message: "Ruolo non valido" });
+      }
+      
+      const updatedUser = await storage.updateUser(id, { role });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // PDF Generation Route
   app.post("/api/generate-pdf", isAuthenticated, async (req, res, next) => {
     try {

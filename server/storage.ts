@@ -11,6 +11,8 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUsers(): Promise<User[]>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   
   // Product operations
   createProduct(product: InsertProduct): Promise<Product>;
@@ -30,7 +32,7 @@ export interface IStorage {
   updateSupplementDetails(productId: number, details: Partial<InsertSupplementDetails>): Promise<SupplementDetails | undefined>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 // In-memory storage implementation
@@ -43,7 +45,7 @@ export class MemStorage implements IStorage {
   private productId: number;
   private cosmeticId: number;
   private supplementId: number;
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
@@ -73,9 +75,35 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userId++;
     const createdAt = new Date();
-    const user: User = { ...insertUser, id, createdAt };
+    
+    // Assicuriamoci che i campi obbligatori siano impostati
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      createdAt,
+      role: insertUser.role || "visualizzatore",
+      approved: insertUser.approved !== undefined ? insertUser.approved : false
+    };
+    
     this.users.set(id, user);
     return user;
+  }
+  
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+  
+  async updateUser(id: number, userUpdate: Partial<InsertUser>): Promise<User | undefined> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) return undefined;
+    
+    const updatedUser: User = {
+      ...existingUser,
+      ...userUpdate
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   // Product methods
@@ -83,7 +111,41 @@ export class MemStorage implements IStorage {
     const id = this.productId++;
     const createdAt = new Date();
     const updatedAt = new Date();
-    const product: Product = { ...insertProduct, id, createdAt, updatedAt };
+    
+    // Per assicurarci che tutti i campi siano impostati correttamente
+    const product: Product = { 
+      // Valori di default per tutti i campi
+      id,
+      createdAt,
+      updatedAt,
+      subtitle: null,
+      code: null,
+      ref: null,
+      date: null,
+      content: null,
+      category: null,
+      packaging: null,
+      accessory: null,
+      batch: null,
+      cpnp: null,
+      authMinistry: null,
+      ingredients: null,
+      tests: null,
+      certifications: null,
+      clinicalTrials: null,
+      claims: null,
+      naturalActives: null,
+      functionalActives: null,
+      characteristics: null,
+      usage: null,
+      warnings: null,
+      conservationMethod: null,
+      specialWarnings: null,
+      
+      // Override con i valori inseriti
+      ...insertProduct
+    };
+    
     this.products.set(id, product);
     return product;
   }
@@ -121,7 +183,23 @@ export class MemStorage implements IStorage {
   // Cosmetic details methods
   async createCosmeticDetails(details: InsertCosmeticDetails): Promise<CosmeticDetails> {
     const id = this.cosmeticId++;
-    const cosmeticDetails: CosmeticDetails = { ...details, id };
+    
+    // Imposta tutti i campi con valori predefiniti
+    const cosmeticDetails: CosmeticDetails = { 
+      id,
+      color: null,
+      fragrance: null,
+      sensorial: null,
+      absorbability: null,
+      ph: null,
+      viscosity: null,
+      cbt: null,
+      yeastAndMold: null,
+      escherichiaColi: null,
+      pseudomonas: null,
+      ...details
+    };
+    
     this.cosmeticDetails.set(cosmeticDetails.productId, cosmeticDetails);
     return cosmeticDetails;
   }
@@ -151,7 +229,16 @@ export class MemStorage implements IStorage {
   // Supplement details methods
   async createSupplementDetails(details: InsertSupplementDetails): Promise<SupplementDetails> {
     const id = this.supplementId++;
-    const supplementDetails: SupplementDetails = { ...details, id };
+    
+    // Imposta tutti i campi con valori predefiniti
+    const supplementDetails: SupplementDetails = { 
+      id,
+      nutritionalInfo: null,
+      indications: null,
+      dosage: null,
+      ...details
+    };
+    
     this.supplementDetails.set(supplementDetails.productId, supplementDetails);
     return supplementDetails;
   }

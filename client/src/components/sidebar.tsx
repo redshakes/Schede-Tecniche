@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { UserCog } from "lucide-react";
 
 type SidebarProps = {
   activeType: string;
@@ -11,7 +12,7 @@ type SidebarProps = {
 
 export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
   const [location, navigate] = useLocation();
-  const { user, logoutMutation } = useAuth();
+  const { user, logoutMutation, canAdministrate } = useAuth();
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -90,6 +91,17 @@ export default function Sidebar({ activeType, setActiveType }: SidebarProps) {
             <i className="pi pi-list mr-3"></i>
             <span>Elenco Schede</span>
           </Button>
+
+          {canAdministrate() && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => navigate("/admin/users")}
+            >
+              <UserCog className="h-4 w-4 mr-3" />
+              <span>Gestione Utenti</span>
+            </Button>
+          )}
         </div>
       </nav>
 

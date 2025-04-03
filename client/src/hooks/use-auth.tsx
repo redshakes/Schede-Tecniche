@@ -14,7 +14,7 @@ type AuthContextType = {
   error: Error | null;
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<User, Error, RegisterData>;
+  registerMutation: UseMutationResult<{ message?: string } | User, Error, RegisterData>;
 };
 
 type LoginData = {
@@ -27,6 +27,7 @@ type RegisterData = {
   password: string;
   email: string;
   name: string;
+  role: "amministratore" | "compilatore" | "visualizzatore";
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -63,17 +64,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const registerMutation = useMutation({
+  const registerMutation = useMutation<{ message?: string } | User, Error, RegisterData>({
     mutationFn: async (data: RegisterData) => {
       const res = await apiRequest("POST", "/api/register", data);
       return await res.json();
     },
-    onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Registrazione completata",
-        description: `Benvenuto, ${user.name}!`,
-      });
+    onSuccess: (response) => {
+      // La risposta potrebbe essere un messaggio di successo invece di un utente
+      if ('message' in response) {
+        toast({
+          title: "Registrazione completata",
+          description: response.message,
+        });
+      } else {
+        // Se non è un messaggio, deve essere un utente
+        const user = response as User;
+        queryClient.setQueryData(["/api/user"], user);
+        toast({
+          title: "Registrazione completata",
+          description: `Benvenuto, ${user.name}!`,
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -120,10 +131,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Funzioni di controllo permessi
+export function hasRole(user: User | null, role: string | string[]): boolean {
+  if (!user) return false;
+  const roles = Array.isArray(role) ? role : [role];
+  return roles.includes(user.role);
+}
+
+export function canEdit(user: User | null): boolean {
+  return hasRole(user, ["amministratore", "compilatore"]);
+}
+
+export function canAdministrate(user: User | null): boolean {
+  return hasRole(user, "amministratore");
+}
+
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context;
+  return {
+    ...context,
+    // Aggiungiamo le funzioni di verifica permessi
+    hasRole: (role: string | string[]) => hasRole(context.user, role),
+    canEdit: () => canEdit(context.user),
+    canAdministrate: () => canAdministrate(context.user),
+  };
 }

@@ -9,15 +9,27 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import ProductList from "@/pages/product-list";
 import ProductForm from "@/pages/product-form";
+import AdminUsersPage from "@/pages/admin-users";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/products" component={ProductList} />
-      <ProtectedRoute path="/products/new" component={ProductForm} />
-      <ProtectedRoute path="/products/:id" component={ProductForm} />
+      <Route path="/">
+        {() => <ProtectedRoute path="/" component={HomePage} />}
+      </Route>
+      <Route path="/products">
+        {() => <ProtectedRoute path="/products" component={ProductList} />}
+      </Route>
+      <Route path="/products/new">
+        {() => <ProtectedRoute path="/products/new" component={ProductForm} />}
+      </Route>
+      <Route path="/products/:id">
+        {() => <ProtectedRoute path="/products/:id" component={ProductForm} />}
+      </Route>
+      <Route path="/admin/users">
+        {() => <ProtectedRoute path="/admin/users" component={AdminUsersPage} />}
+      </Route>
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

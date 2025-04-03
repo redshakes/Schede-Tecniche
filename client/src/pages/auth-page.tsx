@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username è obbligatorio"),
@@ -22,6 +23,9 @@ const registerSchema = z.object({
   password: z.string().min(6, "La password deve contenere almeno 6 caratteri"),
   email: z.string().email("Email non valida"),
   name: z.string().min(1, "Nome è obbligatorio"),
+  role: z.enum(["amministratore", "compilatore", "visualizzatore"], {
+    errorMap: () => ({ message: "Seleziona un ruolo valido" }),
+  }),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -50,6 +54,7 @@ export default function AuthPage() {
       password: "",
       email: "",
       name: "",
+      role: "visualizzatore",
     },
   });
 
@@ -239,6 +244,29 @@ export default function AuthPage() {
                               {...field}
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ruolo</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleziona un ruolo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="visualizzatore">Visualizzatore</SelectItem>
+                              <SelectItem value="compilatore">Compilatore</SelectItem>
+                              <SelectItem value="amministratore">Amministratore</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
