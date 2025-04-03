@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Download, Edit, Eye, MoreVertical, Search, Trash2 } from "lucide-react";
+import { TEMPLATE_COLORS } from "../../server/pdf";
 
 export default function ProductList() {
   const [activeType, setActiveType] = useState<string>("cosmetic");

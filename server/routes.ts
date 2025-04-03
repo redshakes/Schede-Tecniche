@@ -478,7 +478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PDF Generation Route
+  // DOCX/PDF Generation Route
   app.post("/api/generate-pdf", isAuthenticated, async (req, res, next) => {
     try {
       const { id } = req.body;
@@ -492,29 +492,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Prodotto non trovato" });
       }
       
-      let pdfContent;
+      let docxBuffer;
       
       if (product.type === "cosmetic") {
         const details = await storage.getCosmeticDetailsByProductId(id);
         if (!details) {
           return res.status(404).json({ message: "Dettagli prodotto non trovati" });
         }
-        pdfContent = generateCosmeticPDF(product, details);
+        docxBuffer = await generateCosmeticPDF(product, details);
       } else if (product.type === "supplement") {
         const details = await storage.getSupplementDetailsByProductId(id);
         if (!details) {
           return res.status(404).json({ message: "Dettagli prodotto non trovati" });
         }
-        pdfContent = generateSupplementPDF(product, details);
+        docxBuffer = await generateSupplementPDF(product, details);
       } else {
         return res.status(400).json({ message: "Tipo di prodotto non supportato" });
       }
       
-      // Set headers for PDF download
-      res.setHeader('Content-Type', 'text/html');
-      res.setHeader('Content-Disposition', `attachment; filename="scheda-tecnica-${product.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
+      // Set headers for DOCX download
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="scheda-tecnica-${product.name.replace(/\s+/g, '-').toLowerCase()}.docx"`);
       
-      res.send(pdfContent);
+      res.send(docxBuffer);
     } catch (error) {
       next(error);
     }
