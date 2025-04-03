@@ -15,22 +15,50 @@ export default function SupplementForm({ control, isReadOnly = false }: Suppleme
     return {
       ...props,
       readOnly: isReadOnly,
-      className: `${props.className || ''} ${isReadOnly ? 'bg-gray-100' : ''}`
+      className: `${props.className || ''} ${isReadOnly ? 'bg-gray-100' : ''}`,
+      // Disabilita l'autofocus per risolvere il problema di salto automatico
+      autoFocus: false
     };
   };
   
-  // Applicare readOnly a tutti gli input del componente
+  // Applicare readOnly a tutti gli input del componente e disabilitare autofocus
   useEffect(() => {
-    if (isReadOnly) {
-      // Seleziona tutti gli input e textarea nel componente
-      setTimeout(() => {
-        const inputs = document.querySelectorAll('.supplement-form textarea');
-        inputs.forEach(input => {
+    // Disabilita l'autofocus su tutti gli input e textarea
+    const disableAutoFocus = () => {
+      const inputs = document.querySelectorAll('input, textarea');
+      inputs.forEach(input => {
+        // Rimuovi l'attributo autofocus se presente
+        input.removeAttribute('autofocus');
+        
+        // Aggiungi l'attributo readOnly se necessario
+        if (isReadOnly) {
           input.setAttribute('readOnly', 'true');
           input.classList.add('bg-gray-100');
-        });
-      }, 100);
-    }
+        }
+      });
+    };
+
+    // Applica immediatamente e di nuovo dopo un breve ritardo per catturare anche elementi aggiunti dinamicamente
+    disableAutoFocus();
+    setTimeout(disableAutoFocus, 100);
+    
+    // Aggiungi un listener per prevenire che il focus venga impostato automaticamente sui campi
+    const preventAutoFocus = (e: MouseEvent) => {
+      // Impedisci al browser di impostare automaticamente il focus
+      e.preventDefault();
+      // Rimuovi l'attributo autofocus da tutti gli elementi
+      document.querySelectorAll('[autofocus]').forEach(el => {
+        el.removeAttribute('autofocus');
+      });
+    };
+    
+    // Aggiungi il listener al documento
+    document.addEventListener('click', preventAutoFocus, true);
+    
+    // Rimuovi il listener quando il componente viene smontato
+    return () => {
+      document.removeEventListener('click', preventAutoFocus, true);
+    };
   }, [isReadOnly]);
   
   return (

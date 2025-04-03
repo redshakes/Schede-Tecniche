@@ -11,12 +11,50 @@ type PdfPreviewImprovedProps = {
 export default function PdfPreviewImproved({ product, details }: PdfPreviewImprovedProps) {
   const [zoom, setZoom] = useState<number>(100);
 
-  const zoomIn = () => {
+  const zoomIn = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Previene il comportamento predefinito e la propagazione per evitare il focus automatico
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Memorizza l'elemento attualmente focalizzato (se presente)
+    const activeElement = document.activeElement;
+    
+    // Aggiorna lo zoom
     setZoom(Math.min(zoom + 10, 150));
+    
+    // Ripristina il focus all'elemento precedente o togli il focus
+    setTimeout(() => {
+      if (activeElement instanceof HTMLElement) {
+        activeElement.focus();
+      } else {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      }
+    }, 10);
   };
 
-  const zoomOut = () => {
+  const zoomOut = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Previene il comportamento predefinito e la propagazione per evitare il focus automatico
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Memorizza l'elemento attualmente focalizzato (se presente)
+    const activeElement = document.activeElement;
+    
+    // Aggiorna lo zoom
     setZoom(Math.max(zoom - 10, 70));
+    
+    // Ripristina il focus all'elemento precedente o togli il focus
+    setTimeout(() => {
+      if (activeElement instanceof HTMLElement) {
+        activeElement.focus();
+      } else {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      }
+    }, 10);
   };
 
   // Determina i colori del template basati sul tipo di prodotto
@@ -44,7 +82,7 @@ export default function PdfPreviewImproved({ product, details }: PdfPreviewImpro
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6 h-[calc(100vh-10rem)] overflow-y-auto">
+    <div className="bg-white shadow rounded-lg p-6 h-[calc(100vh-10rem)] overflow-y-auto overflow-x-hidden">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium text-neutral-800">Anteprima PDF</h2>
         
@@ -60,9 +98,9 @@ export default function PdfPreviewImproved({ product, details }: PdfPreviewImpro
       </div>
       
       <div 
-        className="border border-neutral-200 rounded mx-auto" 
+        className="border border-neutral-200 rounded mx-auto overflow-hidden" 
         style={{ 
-          width: `${zoom}%`, 
+          width: `${Math.min(zoom, 100)}%`, 
           maxWidth: '800px',
           backgroundColor: 'white',
           transition: 'width 0.2s ease',

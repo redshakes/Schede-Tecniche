@@ -32,8 +32,10 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
             <ThemeToggle />
           </div>
         </header>
-        <main className="container mx-auto px-4">
-          {children}
+        <main className="container mx-auto px-4 max-w-full overflow-x-hidden">
+          <div className="max-w-full overflow-x-hidden">
+            {children}
+          </div>
         </main>
       </div>
     );
@@ -64,8 +66,10 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
             <ThemeToggle />
           </div>
         </header>
-        <main className="container mx-auto px-4">
-          {children}
+        <main className="container mx-auto px-4 max-w-full overflow-x-hidden">
+          <div className="max-w-full overflow-x-hidden">
+            {children}
+          </div>
         </main>
       </div>
     );
@@ -78,15 +82,17 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
         activeType="" 
         setActiveType={() => {}} 
       />
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <header className="w-full p-4 sticky top-0 z-30 bg-background/90 backdrop-blur-sm border-b">
           <div className="container flex justify-between items-center">
             <h1 className="text-xl font-bold">{title}</h1>
             <ThemeToggle />
           </div>
         </header>
-        <main className="container mx-auto px-4">
-          {children}
+        <main className="container mx-auto px-4 max-w-full overflow-x-hidden">
+          <div className="max-w-full overflow-x-hidden">
+            {children}
+          </div>
         </main>
       </div>
     </div>
